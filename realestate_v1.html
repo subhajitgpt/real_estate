@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Geo + Pyodide — Property Estimator & Retail Feasibility</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root{ --ink:#0f172a; --muted:#677084; --soft:#e7eef5; --brand:#2563eb; --brand2:#7c3aed; }
+    body{background:#f7f9fc;color:var(--ink)}
+    .navbar{background:linear-gradient(90deg,#0ea5e9,#6366f1)}
+    .navbar .navbar-brand,.navbar .navbar-text{color:#fff}
+    .card-soft{border:1px solid #e7eef5;box-shadow:0 2px 6px rgba(16,24,40,.04);background:#fff}
+    .mapbox{width:100%;height:440px;border:1px solid #e7eef5;border-radius:12px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .prewrap{white-space:pre-wrap}
+    .badge-soft{background:#eef2ff;color:#3730a3;border-radius:999px}
+    .nav-tabs.nav-tabs-scroll{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden}
+    .nav-tabs.nav-tabs-scroll .nav-link{white-space:nowrap}
+    .nav-tabs{border-bottom:1px solid #e7eef5}
+    .nav-tabs.nav-tabs-scroll::-webkit-scrollbar{height:6px}
+    .nav-tabs.nav-tabs-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+    .stat{border:1px solid #e7eef5;border-radius:16px;padding:14px 16px;background:#fff}
+    .stat .label{color:#677084;font-size:.9rem}
+    .stat .value{font-weight:700;font-size:1.15rem}
+    .btn-pill{border-radius:999px}
+    .legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg mb-3">
+    <div class="container-fluid">
+      <span class="navbar-brand fw-bold">🗺️ Geo + Pyodide Utilities</span>
+      <span class="navbar-text">Property Estimator • Retail Feasibility • 100% Client-side</span>
+      <div class="ms-auto d-flex gap-2">
+        <button id="btnOpenAIModal" class="btn btn-light btn-sm">✨ OpenAI Prompt</button>
+        <button id="btnLoadMaps" class="btn btn-warning btn-sm">Load Maps</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- TABS (Retail first) -->
+    <ul class="nav nav-tabs nav-tabs-scroll" id="mainTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-retail" data-bs-toggle="tab" data-bs-target="#panel-retail" type="button" role="tab">1) Retail Location Feasibility</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-prop" data-bs-toggle="tab" data-bs-target="#panel-prop" type="button" role="tab">2) Property Value &amp; Rent Estimator</button>
+      </li>
+    </ul>
+
+    <div class="tab-content py-3">
+      <!-- ===== Retail ===== -->
+      <div class="tab-pane fade show active" id="panel-retail" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-lg-7">
+            <div class="card card-soft p-3">
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="badge badge-soft px-3 py-2">Search or click map to set trade area center</span>
+                <div class="d-flex gap-2">
+                  <button id="btnLocate2" class="btn btn-sm btn-outline-primary btn-pill">Use My Location</button>
+                  <button id="btnRetailPreset" class="btn btn-sm btn-outline-secondary btn-pill">Residential Preset</button>
+                </div>
+              </div>
+              <div class="position-relative my-2">
+                <span class="position-absolute" style="left:10px;top:50%;transform:translateY(-50%);opacity:.6">🔎</span>
+                <input id="searchBox2" class="form-control ps-5" placeholder="Search address, landmark, city...">
+              </div>
+              <div id="map2" class="mapbox"></div>
+
+              <div class="row g-2 mt-2">
+                <div class="col-6">
+                  <label class="form-label">Search Radius: <b><span id="retailRadiusLbl">1000</span> m</b></label>
+                  <input id="retailRadius" type="range" class="form-range" min="200" max="5000" value="1000" step="50">
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Max Places per Type: <b><span id="retailLimitLbl">40</span></b></label>
+                  <input id="retailLimit" type="range" class="form-range" min="10" max="60" value="40" step="5">
+                </div>
+              </div>
+
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label">Min Rating</label>
+                  <select id="minRating" class="form-select">
+                    <option value="0" selected>Any</option><option value="3.5">3.5+</option><option value="4.0">4.0+</option><option value="4.5">4.5+</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Open Now</label>
+                  <select id="openNow" class="form-select">
+                    <option value="any" selected>Any</option><option value="yes">Yes</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Keyword (optional)</label>
+                  <input id="retailKeyword" class="form-control" placeholder="eg. vegetarian, budget">
+                </div>
+              </div>
+
+              <div class="text-muted small mt-2">Selected: <span id="retailLatLng">—</span></div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card card-soft p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-1">POI Types &amp; Weights</h6>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary btn-pill dropdown-toggle" data-bs-toggle="dropdown">Presets</button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" data-preset="residential">Residential Area</a></li>
+                    <li><a class="dropdown-item" data-preset="student">Student Hub</a></li>
+                    <li><a class="dropdown-item" data-preset="office">Office District</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="text-muted small mb-1">Toggle types &amp; adjust weights (importance).</div>
+
+              <div id="poiLegend" class="small mb-2"></div>
+              <div id="poiList" class="row g-2 mt-2"></div>
+
+              <div class="mt-3 d-grid gap-2">
+                <button id="btnScanPOI" class="btn btn-primary btn-pill">Scan Area (Places)</button>
+                <button id="btnScoreRetail" class="btn btn-outline-primary btn-pill">Compute Score (Pyodide)</button>
+                <div id="scoreErr" class="text-danger small mt-2 d-none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="card card-soft p-3 mt-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="mb-0">Feasibility Summary</h6>
+            <button class="btn btn-sm btn-outline-secondary btn-pill" data-copy="retailBreakdown">Copy</button>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-2"><div class="stat"><div class="label">Raw Score</div><div id="retRaw" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Normalized</div><div id="retNorm" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Types Scanned</div><div id="retTypes" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Radius (m)</div><div id="retRadius" class="value">—</div></div></div>
+            <div class="col-md-4"><div class="stat"><div class="label">Centers &amp; Filters</div><div id="retMeta" class="value small">—</div></div></div>
+          </div>
+
+          <div class="table-responsive mt-3">
+            <table class="table table-sm">
+              <thead class="table-light">
+                <tr><th>Type</th><th>Count</th><th>Avg Rating</th><th>Weight</th><th>Component</th></tr>
+              </thead>
+              <tbody id="retTableBody"></tbody>
+            </table>
+          </div>
+
+          <pre id="retailBreakdown" class="form-control mono prewrap mt-2" style="min-height:110px;">—</pre>
+        </div>
+
+        <!-- Flat POI List with Category + Export -->
+        <div class="card card-soft p-3 mt-3">
+          <div class="d-flex flex-wrap gap-2 align-items-end">
+            <div>
+              <label class="form-label mb-1">Category (POI Type)</label>
+              <select id="poiCategory" class="form-select form-select-sm" style="min-width:260px">
+                <option value="" selected disabled>— select after scanning —</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label mb-1">Quick Filter (text)</label>
+              <input id="poiFilterText" class="form-control form-control-sm" placeholder="name/address contains...">
+            </div>
+            <div class="ms-auto d-flex gap-2">
+              <button id="btnExportCSV" class="btn btn-outline-secondary btn-sm" type="button">Export CSV</button>
+              <button id="btnExportXLSX" class="btn btn-outline-secondary btn-sm" type="button">Export XLSX</button>
+            </div>
+          </div>
+          <div class="table-responsive mt-3">
+            <table class="table table-sm table-hover" id="poiFlatTable">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th><th>Name</th><th>Address</th><th>Rating</th><th>Ratings Count</th><th>Type</th><th>Place ID</th>
+                </tr>
+              </thead>
+              <tbody id="poiFlatBody"><tr><td colspan="7" class="text-muted">Scan an area, choose a category, and the list will appear here.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Property ===== -->
+      <div class="tab-pane fade" id="panel-prop" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-lg-7">
+            <div class="card card-soft p-3">
+              <div class="d-flex align-items-center justify-content-between">
+                <span class="badge badge-soft px-3 py-2">Search or click map to set location</span>
+                <div class="d-flex gap-2">
+                  <button id="btnLocate1" class="btn btn-sm btn-outline-primary btn-pill">Use My Location</button>
+                  <button id="btnPropDemo" class="btn btn-sm btn-outline-secondary btn-pill">Demo Data</button>
+                </div>
+              </div>
+              <div class="position-relative my-2">
+                <span class="position-absolute" style="left:10px;top:50%;transform:translateY(-50%);opacity:.6">🔎</span>
+                <input id="searchBox1" class="form-control ps-5" placeholder="Search address, landmark, city...">
+              </div>
+              <div id="map1" class="mapbox"></div>
+              <div class="text-muted small mt-2">Selected: <span id="propLatLng">—</span></div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="card card-soft p-3">
+              <div class="row g-2">
+                <div class="col-4">
+                  <label class="form-label">Currency</label>
+                  <select id="currency" class="form-select">
+                    <option value="INR" selected>₹ INR</option><option value="AED">AED</option><option value="USD">USD</option>
+                  </select>
+                </div>
+                <div class="col-4">
+                  <label class="form-label">Units</label>
+                  <select id="unit" class="form-select">
+                    <option value="sqft" selected>sqft</option><option value="sqm">sqm</option>
+                  </select>
+                </div>
+                <div class="col-4">
+                  <label class="form-label">Property Size</label>
+                  <input id="propSize" type="number" class="form-control" placeholder="e.g., 1200">
+                </div>
+              </div>
+
+              <div class="row g-2 mt-1">
+                <div class="col-6">
+                  <label class="form-label">Year Built (optional)</label>
+                  <input id="propYear" type="number" class="form-control" placeholder="e.g., 2015">
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Condition Premium</label>
+                  <input id="condPremium" type="range" min="0" max="20" step="1" class="form-range">
+                  <div class="small text-muted"><span id="condPremiumLbl">0</span>%</div>
+                </div>
+              </div>
+
+              <hr class="my-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Comparable Sales</h6>
+                <button id="btnAddCompSale" class="btn btn-sm btn-outline-secondary btn-pill" type="button">+ Add Row</button>
+              </div>
+              <div class="text-muted small">Enter size (<span class="unit-label">sqft</span>) &amp; sale price. (Optional if you provide rents)</div>
+              <table class="table table-sm mt-2" id="tblCompSales">
+                <thead><tr><th>Size</th><th>Sale Price</th><th></th></tr></thead><tbody></tbody>
+              </table>
+
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <h6 class="mb-0">Comparable Rents</h6>
+                <button id="btnAddCompRent" class="btn btn-sm btn-outline-secondary btn-pill" type="button">+ Add Row</button>
+              </div>
+              <div class="text-muted small">Enter size (<span class="unit-label">sqft</span>) &amp; monthly rent. (Optional if you provide sales)</div>
+              <table class="table table-sm mt-2" id="tblCompRents">
+                <thead><tr><th>Size</th><th>Monthly Rent</th><th></th></tr></thead><tbody></tbody>
+              </table>
+
+              <div class="row g-2 mt-2">
+                <div class="col-6">
+                  <label class="form-label">Age Depreciation</label>
+                  <div class="input-group input-group-sm">
+                    <input id="ageDep" type="number" class="form-control" value="0.5" step="0.1"><span class="input-group-text">% / yr</span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Vacancy</label>
+                  <div class="input-group input-group-sm">
+                    <input id="vacancy" type="number" class="form-control" value="5" step="0.5"><span class="input-group-text">%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-2 mt-1">
+                <div class="col-6">
+                  <label class="form-label">Maintenance</label>
+                  <div class="input-group input-group-sm">
+                    <input id="maint" type="number" class="form-control" value="1" step="0.1"><span class="input-group-text">% of value / yr</span>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Target Net Yield</label>
+                  <div class="input-group input-group-sm">
+                    <input id="targetYield" type="number" class="form-control" value="4" step="0.1"><span class="input-group-text">%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 d-grid gap-2">
+                <button id="btnEstimate" class="btn btn-primary btn-pill" type="button">Estimate Value &amp; Yield (Pyodide)</button>
+                <button id="btnResetProp" class="btn btn-outline-secondary btn-pill" type="button">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-soft p-3 mt-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="mb-0">Results</h6>
+            <button class="btn btn-sm btn-outline-secondary btn-pill" data-copy="propResultsPre" type="button">Copy</button>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-2"><div class="stat"><div class="label">Est. Value</div><div id="propVal" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Gross Yield</div><div id="propYield" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Net Yield</div><div id="propYieldNet" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Median Sale / <span class="unit-label">sqft</span></div><div id="propPsfSale" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Median Rent / <span class="unit-label">sqft</span></div><div id="propPsfRent" class="value">—</div></div></div>
+            <div class="col-md-2"><div class="stat"><div class="label">Est. Rent / mo</div><div id="propRentMo" class="value">—</div></div></div>
+          </div>
+          <pre id="propResultsPre" class="form-control mono prewrap mt-3" style="min-height:130px;">—</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OpenAI Floating Modal -->
+  <div class="modal fade" id="openaiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title">✨ OpenAI Prompt</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning small mb-3">
+            Paste a key below or set one in code. The modal buttons add context from the current page.
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Insert Context</label>
+              <div class="d-grid gap-2">
+                <button id="btnCtxProperty" class="btn btn-outline-secondary btn-sm" type="button">↘ Add Property Context</button>
+                <button id="btnCtxRetail" class="btn btn-outline-secondary btn-sm" type="button">↘ Add Retail Context</button>
+              </div>
+              <hr>
+              <label class="form-label">Override OpenAI Key (optional)</label>
+              <input id="openaiKeyInput" class="form-control form-control-sm" placeholder="sk-...">
+              <label class="form-label mt-2">Model</label>
+              <select id="openaiModel" class="form-select form-select-sm">
+                <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Your Prompt</label>
+              <textarea id="openaiPrompt" class="form-control mono" rows="10" placeholder="Ask for insights..."></textarea>
+              <div class="d-flex justify-content-end gap-2 mt-2">
+                <button id="btnRunOpenAI" class="btn btn-primary" type="button">Generate</button>
+              </div>
+              <label class="form-label mt-3">Response</label>
+              <pre id="openaiOutput" class="form-control mono prewrap" style="min-height:160px">—</pre>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <small class="text-muted">Tip: add context first, then edit the prompt and click Generate.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Libs -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    // =====================================================================================
+    // Set your keys here:
+    const GMAPS_KEY = "";   // <-- Google Maps key
+    const OPENAI_KEY = ""
+
+    // =====================================================================================
+
+    let pyodide=null, pyReady=false;
+    let map1=null,map2=null, marker1=null,marker2=null, circle2=null;
+    let placesService1=null, placesService2=null;
+    let autocomplete1=null, autocomplete2=null;
+    let lastRetailScan=null;
+    let lastRetailResults=null;
+    let mapsLoaded=false;
+
+    const DEFAULT_POI_TYPES = [
+      {type:'hospital',        label:'Hospitals',        weight:1.6, color:'#ef4444', emoji:'🏥'},
+      {type:'pharmacy',        label:'Pharmacies',       weight:1.4, color:'#f59e0b', emoji:'💊'},
+      {type:'doctor',          label:'Clinics',          weight:1.3, color:'#10b981', emoji:'🩺'},
+      {type:'ambulance',       label:'Ambulances',       weight:1.7, color:'#dc2626', emoji:'🚑'},
+      {type:'school',          label:'Schools',          weight:1.2, color:'#2563eb', emoji:'🏫'},
+      {type:'university',      label:'Universities',     weight:1.0, color:'#7c3aed', emoji:'🎓'},
+      {type:'gym',             label:'Gyms',             weight:0.6, color:'#0ea5e9', emoji:'🏋️'},
+      {type:'restaurant',      label:'Restaurants',      weight:0.8, color:'#16a34a', emoji:'🍽️'},
+      {type:'cafe',            label:'Cafés',            weight:0.7, color:'#dc2626', emoji:'☕'},
+      {type:'shopping_mall',   label:'Shopping Malls',   weight:1.0, color:'#ea580c', emoji:'🛍️'},
+      {type:'bank',            label:'Banks',            weight:0.5, color:'#64748b', emoji:'🏦'},
+      {type:'transit_station', label:'Transit',          weight:1.1, color:'#f59e0b', emoji:'🚌'},
+      {type:'subway_station',  label:'Metro/Subway',     weight:1.1, color:'#14b8a6', emoji:'🚇'},
+      {type:'supermarket',     label:'Supermarkets',     weight:0.9, color:'#9333ea', emoji:'🛒'},
+      {type:'store',           label:'Stores',           weight:0.4, color:'#475569', emoji:'🏪'}
+    ];
+
+    const CURRENCY_SYMBOL = { INR:'₹', AED:'AED ', USD:'$' };
+    const SQ_CONV = { sqft:1, sqm:10.7639 };
+    const CURRENCY = ()=>CURRENCY_SYMBOL[document.getElementById('currency').value]||'';
+    const UNIT = ()=>document.getElementById('unit').value;
+    const U2SQFT = ()=>SQ_CONV[UNIT()]||1;
+    const fmtMoney = n => (n==null||isNaN(n)) ? '-' : (CURRENCY()+Math.round(n).toLocaleString());
+    const fmtPct = n => (n==null||isNaN(n)) ? '-' : (n.toFixed(2)+' %');
+    const updateUnitLabels=()=>document.querySelectorAll('.unit-label').forEach(e=>e.textContent=UNIT());
+    document.getElementById('unit').addEventListener('change', updateUnitLabels);
+    const copyFrom = id => { if(navigator.clipboard && document.getElementById(id)) navigator.clipboard.writeText(document.getElementById(id).textContent||''); };
+    document.addEventListener('click', (e)=>{ const t=e.target.closest('[data-copy]'); if(t) copyFrom(t.getAttribute('data-copy')); });
+
+    // ---------- Pyodide init ----------
+    (async () => {
+      pyodide = await loadPyodide();
+      await pyodide.runPythonAsync(`
+import math, statistics, json, datetime
+try:
+    from pyodide.ffi import to_py
+except Exception:
+    def to_py(x): return x
+
+def _to_num(x, default=0.0):
+    try:
+        return float(x)
+    except Exception:
+        return float(default)
+
+def _coerce_rows(lst, kind):
+    try:
+        lst = to_py(lst)
+    except Exception:
+        pass
+    out = []
+    for it in (lst or []):
+        try:
+            d = dict(it)
+        except Exception:
+            d = {}
+            for k in ('size','price','rent'):
+                try:
+                    d[k] = it[k] if (hasattr(it,'__getitem__')) else getattr(it, k, None)
+                except Exception:
+                    d[k] = None
+        if kind == 'sale':
+            size = _to_num(d.get('size', 0))
+            price = _to_num(d.get('price', 0))
+            if size > 0 and price > 0:
+                out.append({'size': size, 'price': price})
+        else:
+            size = _to_num(d.get('size', 0))
+            rent = _to_num(d.get('rent', 0))
+            if size > 0 and rent > 0:
+                out.append({'size': size, 'rent': rent})
+    return out
+
+def estimate_property(
+    size_sqft,
+    comp_sales,
+    comp_rents,
+    lat=None, lng=None, year_built=None,
+    cond_premium_pct=0.0, age_dep_pct_per_year=0.0,
+    vac_pct=0.0, maint_pct=0.0,
+    target_yield_pct=0.0,
+    fallback_cap_rate=0.06
+):
+    size_sqft = _to_num(size_sqft, 0)
+    cond_premium_pct = _to_num(cond_premium_pct, 0)
+    age_dep_pct_per_year = _to_num(age_dep_pct_per_year, 0)
+    vac_pct = _to_num(vac_pct, 0)
+    maint_pct = _to_num(maint_pct, 0)
+    target_yield_pct = _to_num(target_yield_pct, 0)
+
+    comp_sales = _coerce_rows(comp_sales, 'sale')
+    comp_rents = _coerce_rows(comp_rents, 'rent')
+
+    if not comp_sales and not comp_rents:
+        raise ValueError("Need at least one sale or one rent comparable.")
+
+    psf = [r['price']/r['size'] for r in comp_sales if r['size']>0 and r['price']>0]
+    rpsf= [r['rent']/r['size']  for r in comp_rents if r['size']>0 and r['rent']>0]
+
+    med_psf = statistics.median(psf) if psf else None
+
+    prem = max(0.0, cond_premium_pct/100.0)
+    dep_mult = 1.0
+    if year_built:
+        try:
+            y=int(year_built); yrs=max(0, datetime.datetime.now().year - y)
+            dep_mult=max(0.6, 1.0 - (age_dep_pct_per_year/100.0)*yrs)
+        except Exception:
+            pass
+
+    est_val = None
+    if med_psf is not None:
+        est_val = med_psf*size_sqft*dep_mult*(1.0+prem)
+
+    med_rpsf=None; est_rent_mo=None; gross=None; net=None
+    if rpsf:
+        med_rpsf=statistics.median(rpsf)
+        est_rent_mo=None
+        est_rent_mo=med_rpsf*size_sqft
+        if est_rent_mo and est_rent_mo>0:
+            annual=est_rent_mo*12.0
+            if est_val:
+                gross = (annual / est_val) * 100.0
+                vac_amt = (vac_pct/100.0)*annual
+                maint_amt = (maint_pct/100.0)*est_val
+                net = ((annual - vac_amt - maint_amt) / est_val) * 100.0
+            else:
+                ty = max(0.0, target_yield_pct/100.0)
+                if ty > 0:
+                    net_income = annual * (1.0 - vac_pct/100.0)
+                    est_val = net_income / ty
+                else:
+                    est_val = annual / max(1e-6, float(fallback_cap_rate))
+
+    return json.dumps({
+        "median_sale_psf": med_psf,
+        "median_rent_psf": med_rpsf,
+        "estimated_value": est_val,
+        "estimated_rent_month": est_rent_mo,
+        "gross_yield_pct": gross,
+        "net_yield_pct": net,
+        "lat": lat, "lng": lng,
+        "size_sqft": size_sqft,
+        "year_built": year_built,
+        "dep_mult": dep_mult,
+        "premium_pct": prem*100.0
+    })
+
+def fair_value_from_target_yield(annual_net_rent, target_yield_pct):
+    ty=float(target_yield_pct)/100.0
+    return None if ty<=0 else annual_net_rent/ty
+
+def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
+    try:
+        counts_by_type = to_py(counts_by_type)
+        avg_rating_by_type = to_py(avg_rating_by_type)
+        weights = to_py(weights)
+    except Exception:
+        pass
+    score=0.0; detail={}
+    keys=set(list((counts_by_type or {}).keys())+list((weights or {}).keys())+list((avg_rating_by_type or {}).keys()))
+    for t in keys:
+        c=float(counts_by_type.get(t,0) or 0); w=float(weights.get(t,0) or 0); r=float(avg_rating_by_type.get(t,0) or 0)
+        rb=max(0.0,(r-3.0)*0.5); part=w*(c+rb); detail[t]={"count":c,"weight":w,"avg_rating":r,"component":part}; score+=part
+    norm=score/max(1.0, math.log(max(10.0, float(radius_m or 1))))
+    return json.dumps({"raw_score":score,"normalized_score":norm,"detail":detail})
+      `);
+      pyReady = true;
+    })();
+
+    // ---------- Maps loader ----------
+    function loadMaps(){
+      if(mapsLoaded) return;
+      if(!GMAPS_KEY) { alert("Set your Google Maps API key in code (GMAPS_KEY)."); return; }
+      const s=document.createElement('script');
+      s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GMAPS_KEY)}&libraries=places`;
+      s.async=true; s.defer=true;
+      s.onload=()=>{ mapsLoaded=true; initMap1(); initMap2(); };
+      s.onerror=()=>alert('Failed to load Google Maps. Check key/billing/referrers.');
+      document.head.appendChild(s);
+    }
+    document.getElementById('btnLoadMaps').addEventListener('click', loadMaps);
+
+    // ---------- Map 1 (Property) ----------
+    function initMap1(){
+      map1=new google.maps.Map(document.getElementById('map1'),{center:{lat:22.5726,lng:88.3639},zoom:12,mapTypeControl:false});
+      placesService1=new google.maps.places.PlacesService(map1);
+      const input=document.getElementById('searchBox1');
+      autocomplete1=new google.maps.places.Autocomplete(input,{fields:["geometry","name"]});
+      autocomplete1.addListener('place_changed',()=>{
+        const p=autocomplete1.getPlace(); if(!p.geometry||!p.geometry.location) return;
+        const latlng={lat:p.geometry.location.lat(),lng:p.geometry.location.lng()};
+        map1.setCenter(latlng); map1.setZoom(15); setMarker1(latlng);
+      });
+      map1.addListener('click',e=>setMarker1({lat:e.latLng.lat(),lng:e.latLng.lng()}));
+      document.getElementById('btnLocate1').addEventListener('click',()=>{
+        if(navigator.geolocation) navigator.geolocation.getCurrentPosition(pos=>{
+          const latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+          map1.setCenter(latlng); map1.setZoom(15); setMarker1(latlng);
+        },()=>alert('Location unavailable'));
+      });
+    }
+    function setMarker1(latlng){
+      if(marker1) marker1.setMap(null);
+      marker1=new google.maps.Marker({position:latlng,map:map1});
+      document.getElementById('propLatLng').textContent=`${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+    }
+
+    function addRow(tableId,s='',v=''){
+      const tbody=document.querySelector(`#${tableId} tbody`);
+      const tr=document.createElement('tr');
+      if(tableId==='tblCompSales'){
+        tr.innerHTML=`<td><input type="number" class="form-control form-control-sm comp-size" value="${s}"></td>
+                      <td><input type="number" class="form-control form-control-sm comp-price" value="${v}"></td>
+                      <td class="text-end"><button class="btn btn-sm btn-outline-danger" type="button">✕</button></td>`;
+      }else{
+        tr.innerHTML=`<td><input type="number" class="form-control form-control-sm rent-size" value="${s}"></td>
+                      <td><input type="number" class="form-control form-control-sm rent-price" value="${v}"></td>
+                      <td class="text-end"><button class="btn btn-sm btn-outline-danger" type="button">✕</button></td>`;
+      }
+      tbody.appendChild(tr);
+      tr.querySelector('button').addEventListener('click',()=>tr.remove());
+    }
+    document.getElementById('btnAddCompSale').addEventListener('click',()=>addRow('tblCompSales'));
+    document.getElementById('btnAddCompRent').addEventListener('click',()=>addRow('tblCompRents'));
+    for(let i=0;i<3;i++){ addRow('tblCompSales'); addRow('tblCompRents'); }
+
+    document.getElementById('btnPropDemo').addEventListener('click',()=>{
+      document.querySelector('#tblCompSales tbody').innerHTML='';
+      document.querySelector('#tblCompRents tbody').innerHTML='';
+      const sz=(UNIT()==='sqm')?110:1200;
+      [9500000,9200000,9800000].forEach(v=>addRow('tblCompSales',sz,v));
+      [28000,29500,27000].forEach(v=>addRow('tblCompRents',sz,v));
+      document.getElementById('propSize').value=sz; document.getElementById('propYear').value=2017;
+      document.getElementById('condPremium').value=3; document.getElementById('condPremiumLbl').textContent='3';
+      document.getElementById('ageDep').value=0.5; document.getElementById('vacancy').value=5; document.getElementById('maint').value=1; document.getElementById('targetYield').value=4;
+    });
+
+    document.getElementById('btnResetProp').addEventListener('click',()=>{
+      ['propSize','propYear'].forEach(id=>document.getElementById(id).value=''); document.getElementById('condPremium').value=0; document.getElementById('condPremiumLbl').textContent='0';
+      document.querySelector('#tblCompSales tbody').innerHTML=''; document.querySelector('#tblCompRents tbody').innerHTML='';
+      for(let i=0;i<3;i++){ addRow('tblCompSales'); addRow('tblCompRents'); }
+      ['propVal','propYield','propYieldNet','propPsfSale','propPsfRent','propRentMo'].forEach(id=>document.getElementById(id).textContent='—');
+      document.getElementById('propResultsPre').textContent='—';
+    });
+
+    document.getElementById('condPremium').addEventListener('input', e=>{
+      document.getElementById('condPremiumLbl').textContent = e.target.value;
+    });
+
+    // ----- Property: Pyodide via JSON payload -----
+    document.getElementById('btnEstimate').addEventListener('click',async ()=>{
+      try{
+        if(!pyReady){ alert('Python engine is still loading. Please try again.'); return; }
+        const u2=U2SQFT();
+        const size = parseFloat(document.getElementById('propSize').value||'0') * u2;
+        if(!(size>0)){ alert('Enter a valid property size.'); return; }
+        const yearStr=document.getElementById('propYear').value.trim();
+        const year=yearStr?parseInt(yearStr):null;
+        let lat=null,lng=null; if(marker1){ lat=marker1.getPosition().lat(); lng=marker1.getPosition().lng(); }
+        const sales=[], rents=[];
+        document.querySelectorAll('#tblCompSales tbody tr').forEach(tr=>{
+          const s=parseFloat(tr.querySelector('.comp-size').value||'0')*u2; const p=parseFloat(tr.querySelector('.comp-price').value||'0'); if(s>0&&p>0) sales.push({size:s,price:p});
+        });
+        document.querySelectorAll('#tblCompRents tbody tr').forEach(tr=>{
+          const s=parseFloat(tr.querySelector('.rent-size').value||'0')*u2; const r=parseFloat(tr.querySelector('.rent-price').value||'0'); if(s>0&&r>0) rents.push({size:s,rent:r});
+        });
+
+        if(sales.length===0 && rents.length===0){
+          alert('Please add at least one sale or one rent comparable.'); return;
+        }
+
+        const payload = {
+          size_sqft: size,
+          sales, rents,
+          lat, lng, year,
+          condPremium: parseFloat(document.getElementById('condPremium').value||'0'),
+          ageDep: parseFloat(document.getElementById('ageDep').value||'0'),
+          vac: parseFloat(document.getElementById('vacancy').value||'0'),
+          maint: parseFloat(document.getElementById('maint').value||'0'),
+          targetYield: parseFloat(document.getElementById('targetYield').value||'0')
+        };
+        pyodide.globals.set('prop_payload', JSON.stringify(payload));
+
+        const out = await pyodide.runPythonAsync(`
+import json
+p=json.loads(prop_payload)
+estimate_property(
+    p["size_sqft"],
+    p["sales"],
+    p["rents"],
+    p.get("lat"), p.get("lng"), p.get("year"),
+    p.get("condPremium",0), p.get("ageDep",0),
+    p.get("vac",0), p.get("maint",0), p.get("targetYield",0)
+)
+        `);
+        const obj=JSON.parse(out);
+
+        document.getElementById('propVal').textContent=fmtMoney(obj.estimated_value);
+        document.getElementById('propYield').textContent=fmtPct(obj.gross_yield_pct);
+        document.getElementById('propYieldNet').textContent=fmtPct(obj.net_yield_pct);
+        document.getElementById('propPsfSale').textContent=obj.median_sale_psf?fmtMoney(obj.median_sale_psf):'—';
+        document.getElementById('propPsfRent').textContent=obj.median_rent_psf?fmtMoney(obj.median_rent_psf):'—';
+        document.getElementById('propRentMo').textContent=fmtMoney(obj.estimated_rent_month);
+
+        const lines=[];
+        lines.push(`Location: ${obj.lat&&obj.lng?obj.lat.toFixed(6)+', '+obj.lng.toFixed(6):'not set'}`);
+        lines.push(`Size: ${document.getElementById('propSize').value} ${UNIT()} • Year: ${obj.year_built||'-'}`);
+        lines.push(`Depreciation x${obj.dep_mult.toFixed(3)} • Condition +${obj.premium_pct.toFixed(1)}%`);
+        lines.push(`Estimated Value: ${fmtMoney(obj.estimated_value)}`);
+        lines.push(`Gross Yield: ${fmtPct(obj.gross_yield_pct)} • Net Yield: ${fmtPct(obj.net_yield_pct)}`);
+        document.getElementById('propResultsPre').textContent=lines.join('\n');
+      }catch(err){
+        console.error(err);
+        alert('Estimation failed: ' + (err && err.message ? err.message : 'See console'));
+      }
+    });
+
+    // ---------- Map 2 (Retail) ----------
+    const markersByType={};
+    function initMap2(){
+      map2=new google.maps.Map(document.getElementById('map2'),{center:{lat:22.5726,lng:88.3639},zoom:12,mapTypeControl:false});
+      placesService2=new google.maps.places.PlacesService(map2);
+      const input=document.getElementById('searchBox2');
+      autocomplete2=new google.maps.places.Autocomplete(input,{fields:["geometry","name"]});
+      autocomplete2.addListener('place_changed',()=>{
+        const p=autocomplete2.getPlace(); if(!p.geometry||!p.geometry.location) return;
+        const latlng={lat:p.geometry.location.lat(),lng:p.geometry.location.lng()};
+        map2.setCenter(latlng); map2.setZoom(15); setMarker2(latlng);
+      });
+      map2.addEventListener?.('idle', ()=>{});
+      map2.addListener('click',e=>setMarker2({lat:e.latLng.lat(),lng:e.latLng.lng()}));
+      document.getElementById('retailRadius').addEventListener('input',e=>{document.getElementById('retailRadiusLbl').textContent=e.target.value; if(marker2) drawCircle2();});
+      document.getElementById('retailLimit').addEventListener('input',e=>document.getElementById('retailLimitLbl').textContent=e.target.value);
+      buildPOIControls();
+    }
+    function setMarker2(latlng){
+      if(marker2) marker2.setMap(null);
+      marker2=new google.maps.Marker({position:latlng,map:map2});
+      drawCircle2(); document.getElementById('retailLatLng').textContent=`${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+    }
+    function drawCircle2(){
+      const radius=parseInt(document.getElementById('retailRadius').value||'1000');
+      const latlng=marker2.getPosition(); if(circle2) circle2.setMap(null);
+      circle2=new google.maps.Circle({map:map2,center:latlng,radius:radius,fillOpacity:.05,strokeColor:'#2563eb'});
+    }
+    function clearMarkers(){ Object.values(markersByType).forEach(arr=>arr.forEach(m=>m.setMap(null))); Object.keys(markersByType).forEach(k=>markersByType[k]=[]); }
+
+    function buildPOIControls(){
+      const list=document.getElementById('poiList'); list.innerHTML='';
+      const legend=document.getElementById('poiLegend'); legend.innerHTML='<span class="me-2">Legend:</span>';
+      DEFAULT_POI_TYPES.forEach(t=>{
+        const div=document.createElement('div'); div.className='col-12';
+        div.innerHTML=`
+          <div class="d-flex align-items-center gap-2">
+            <span class="legend-dot" style="background:${t.color}"></span>
+            <div class="form-check form-switch me-2">
+              <input class="form-check-input" type="checkbox" id="poi_ck_${t.type}" checked>
+              <label class="form-check-label" for="poi_ck_${t.type}">${t.emoji} ${t.label}</label>
+            </div>
+            <div class="input-group input-group-sm" style="width:150px">
+              <span class="input-group-text">Weight</span>
+              <input id="poi_wt_${t.type}" type="number" class="form-control" step="0.1" value="${t.weight}">
+            </div>
+          </div>`;
+        list.appendChild(div);
+        const lg=document.createElement('span'); lg.innerHTML=`<span class="legend-dot" style="background:${t.color}"></span>${t.emoji} ${t.label} `;
+        legend.appendChild(lg);
+      });
+      document.querySelectorAll('[data-preset]').forEach(el=>el.addEventListener('click',()=>applyPreset(el.dataset.preset)));
+      document.getElementById('btnRetailPreset').addEventListener('click',()=>applyPreset('residential'));
+    }
+    function applyPreset(name){
+      const wt=(t,v)=>{ const e=document.getElementById('poi_wt_'+t); if(e) e.value=v; const ck=document.getElementById('poi_ck_'+t); if(ck) ck.checked=v>0; };
+      wt('hospital',1.6); wt('pharmacy',1.4); wt('doctor',1.3); wt('ambulance',1.7);
+      if(name==='residential'){ wt('school',1.3); wt('university',0.6); wt('gym',0.6); wt('restaurant',0.9); wt('cafe',0.8); wt('shopping_mall',1.0); wt('bank',0.4); wt('transit_station',1.1); wt('subway_station',1.2); wt('supermarket',1.1); wt('store',0.5); }
+      if(name==='student'){ wt('school',0.4); wt('university',1.5); wt('gym',0.7); wt('restaurant',1.0); wt('cafe',1.1); wt('shopping_mall',0.8); wt('bank',0.4); wt('transit_station',1.0); wt('subway_station',1.1); wt('supermarket',1.0); wt('store',0.5); }
+      if(name==='office'){ wt('school',0.2); wt('university',0.4); wt('gym',0.5); wt('restaurant',1.2); wt('cafe',1.2); wt('shopping_mall',0.8); wt('bank',0.7); wt('transit_station',1.2); wt('subway_station',1.2); wt('supermarket',0.8); wt('store',0.6); }
+    }
+
+    function makeEmojiMarkerOptions(t, position){
+      return { position, map:map2,
+        icon:{ path:google.maps.SymbolPath.CIRCLE, scale:7, fillColor:t.color, fillOpacity:1, strokeColor:'#333', strokeWeight:0.5 },
+        label:{ text:t.emoji, fontSize:'12px' }, title:t.label };
+    }
+
+    async function nearbySearchAllTypes(center, radius, limit){
+      const keyword=document.getElementById('retailKeyword').value.trim()||undefined;
+      const openNowSel=document.getElementById('openNow').value;
+      const openNow=openNowSel==='yes'?true:undefined;
+
+      const selected=DEFAULT_POI_TYPES.filter(t=>document.getElementById('poi_ck_'+t.type).checked);
+      const resultsByType={}; clearMarkers();
+
+      for(const t of selected){
+        resultsByType[t.type]=await new Promise(resolve=>{
+          let out=[]; const req={location:center, radius:radius, type:t.type, keyword, openNow};
+          placesService2.nearbySearch(req,(res,status,pag)=>{
+            if(status===google.maps.places.PlacesServiceStatus.OK && res){
+              out=out.concat(res);
+              if(pag && pag.hasNextPage && out.length<limit){ setTimeout(()=>pag.nextPage(),250); }
+              else resolve(out.slice(0,limit));
+            } else resolve(out);
+          });
+        });
+
+        markersByType[t.type]=[];
+        (resultsByType[t.type]||[]).forEach(p=>{
+          if(!p.geometry||!p.geometry.location) return;
+          const meta = DEFAULT_POI_TYPES.find(x=>x.type===t.type) || {color:'#2563eb',emoji:'•',label:t.label};
+          const m=new google.maps.Marker(makeEmojiMarkerOptions(meta,p.geometry.location));
+          markersByType[t.type].push(m);
+        });
+      }
+      return resultsByType;
+    }
+
+    // Scan button
+    document.getElementById('btnScanPOI').addEventListener('click', async ()=>{
+      if(!marker2){ alert('Pick a center on the map (or search).'); return; }
+      const center=marker2.getPosition();
+      const radius=parseInt(document.getElementById('retailRadius').value||'1000');
+      const limit=parseInt(document.getElementById('retailLimit').value||'40');
+      const minRating=parseFloat(document.getElementById('minRating').value||'0');
+      const centerLatLng={lat:center.lat(), lng:center.lng()};
+      const results=await nearbySearchAllTypes(centerLatLng, radius, limit);
+
+      lastRetailResults = results;
+
+      const filtered = {};
+      Object.keys(results).forEach(t=>{ filtered[t]=(results[t]||[]).filter(x=>(x.rating||0)>=minRating); });
+
+      const counts={}, ratings={};
+      Object.keys(filtered).forEach(t=>{
+        const arr=filtered[t]||[]; counts[t]=arr.length;
+        ratings[t]=arr.length ? (arr.reduce((s,x)=>s+(x.rating||0),0)/arr.length) : 0;
+      });
+
+      lastRetailScan={center:centerLatLng, radius, counts, ratings, minRating,
+        openNow:document.getElementById('openNow').value, keyword:document.getElementById('retailKeyword').value.trim()};
+
+      document.getElementById('retTypes').textContent=Object.keys(results).length.toString();
+      document.getElementById('retRadius').textContent=radius.toString();
+      document.getElementById('retMeta').textContent=`Rating>=${minRating||'any'}; Open:${lastRetailScan.openNow}; KW:${lastRetailScan.keyword||'N/A'}`;
+      document.getElementById('retailBreakdown').textContent=
+        `Scanned ${Object.keys(results).length} types within ${radius}m.\nCounts: ${JSON.stringify(counts)}\nAvg ratings: ${JSON.stringify(ratings)}\nClick "Compute Score".`;
+      document.getElementById('scoreErr').classList.add('d-none');
+
+      const sel = document.getElementById('poiCategory');
+      sel.innerHTML = `<option value="" selected disabled>— choose a category —</option>`;
+      Object.keys(lastRetailResults||{}).forEach(k=>{
+        const meta = DEFAULT_POI_TYPES.find(z=>z.type===k);
+        const lbl = meta ? `${meta.emoji} ${meta.label}` : k;
+        sel.insertAdjacentHTML('beforeend', `<option value="${k}">${lbl} (${counts[k]||0})</option>`);
+      });
+
+      renderPOIFlatList();
+    });
+
+    // Score button
+    document.getElementById('btnScoreRetail').addEventListener('click', async ()=>{
+      try{
+        if(!pyReady){ alert('Python engine is still loading. Please try again.'); return; }
+        if(!lastRetailScan){ alert('Run "Scan Area" first.'); return; }
+
+       // --- FIXED weights collection (no null errors) ---
+const weights = {};
+DEFAULT_POI_TYPES.forEach(t => {
+  const ckEl = document.getElementById('poi_ck_' + t.type);
+  const wtEl = document.getElementById('poi_wt_' + t.type);
+
+  // Only proceed if both controls exist
+  if (ckEl && wtEl) {
+    const ck = ckEl.checked;
+    const wtVal = parseFloat(wtEl.value || '0');
+    weights[t.type] = ck ? (isFinite(wtVal) ? wtVal : 0) : 0;
+  } else {
+    // Default 0 weight if not rendered yet
+    weights[t.type] = 0;
+  }
+});
+
+        const cts = {}, rts = {};
+        Object.keys(weights).forEach(k=>{
+          const c = parseFloat((lastRetailScan.counts && lastRetailScan.counts[k]) || 0);
+          const r = parseFloat((lastRetailScan.ratings && lastRetailScan.ratings[k]) || 0);  // <-- fixed && here
+          cts[k] = isFinite(c) ? c : 0;
+          rts[k] = isFinite(r) ? r : 0;
+        });
+
+        const payload = { counts: cts, ratings: rts, weights, radius_m: Number(lastRetailScan.radius) || 1 };
+        pyodide.globals.set('payload_json', JSON.stringify(payload));
+
+        const out = await pyodide.runPythonAsync(`
+import json
+p = json.loads(payload_json)
+score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
+        `);
+        const obj = JSON.parse(out);
+
+        document.getElementById('retRaw').textContent = obj.raw_score.toFixed(2);
+        document.getElementById('retNorm').textContent = obj.normalized_score.toFixed(3);
+
+        const tb = document.getElementById('retTableBody'); tb.innerHTML='';
+        Object.entries(obj.detail).forEach(([t,d])=>{
+          const meta = DEFAULT_POI_TYPES.find(x=>x.type===t);
+          const lbl = meta ? `${meta.emoji} ${meta.label}` : t;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${lbl}</td><td>${(+d.count).toFixed(0)}</td><td>${(+d.avg_rating).toFixed(2)}</td><td>${(+d.weight).toFixed(2)}</td><td>${(+d.component).toFixed(2)}</td>`;
+          tb.appendChild(tr);
+        });
+
+        const lines = [];
+        lines.push(`Center: ${lastRetailScan.center.lat.toFixed(6)}, ${lastRetailScan.center.lng.toFixed(6)}`);
+        lines.push(`Radius: ${lastRetailScan.radius} m`);
+        lines.push(`Filters: rating>=${lastRetailScan.minRating||'any'}; open=${lastRetailScan.openNow}; keyword=${lastRetailScan.keyword||'N/A'}`);
+        lines.push(`Raw Score: ${obj.raw_score.toFixed(2)} • Normalized: ${obj.normalized_score.toFixed(3)}`);
+        document.getElementById('retailBreakdown').textContent = lines.join('\n');
+        document.getElementById('scoreErr').classList.add('d-none');
+      }catch(err){
+        console.error('Compute Score error:', err);
+        const box = document.getElementById('scoreErr');
+        if(box){ box.textContent = (err && err.message) ? err.message : 'Scoring failed.'; box.classList.remove('d-none'); }
+        else { alert('Scoring failed. See console for details.'); }
+      }
+    });
+
+    // ---- Flat POI List + Export ----
+    const poiSel = document.getElementById('poiCategory');
+    const poiFilter = document.getElementById('poiFilterText');
+    if(poiSel) poiSel.addEventListener('change', ()=> renderPOIFlatList());
+    if(poiFilter) poiFilter.addEventListener('input', ()=> renderPOIFlatList());
+
+    function normalizeResultItem(type, p, idx){
+      return {
+        idx: idx+1,
+        name: p.name || '',
+        address: p.vicinity || p.formatted_address || '',
+        rating: typeof p.rating==='number' ? p.rating : '',
+        ratingCount: p.user_ratings_total || '',
+        type,
+        place_id: p.place_id || ''
+      };
+    }
+    function currentPOISelection(){
+      if(!lastRetailResults) return [];
+      const cat = poiSel.value;
+      const arr = (cat && lastRetailResults[cat]) ? lastRetailResults[cat] : [];
+      const ftxt = (poiFilter.value||'').toLowerCase();
+      const rows = arr.map((p,i)=>normalizeResultItem(cat,p,i));
+      return ftxt ? rows.filter(r => (`${r.name} ${r.address}`).toLowerCase().includes(ftxt)) : rows;
+    }
+    function renderPOIFlatList(){
+      const body = document.getElementById('poiFlatBody');
+      const rows = currentPOISelection();
+      if(!rows.length){
+        body.innerHTML = `<tr><td colspan="7" class="text-muted">No items — select a category after scanning, or refine your filter.</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map(r=>`<tr>
+        <td>${r.idx}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.address)}</td>
+        <td>${r.rating!==''?Number(r.rating).toFixed(1):''}</td><td>${r.ratingCount}</td>
+        <td>${r.type}</td><td class="mono">${r.place_id}</td>
+      </tr>`).join('');
+    }
+    function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    // --- Reliable download helper ---
+    function downloadBlob(filename, blob){
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 100);
+    }
+
+    document.getElementById('btnExportCSV').addEventListener('click', ()=>{
+      const rows = currentPOISelection();
+      if(!rows.length){ alert('Nothing to export. Choose a category after scanning.'); return; }
+      const header = ["#", "Name", "Address", "Rating", "Ratings Count", "Type", "Place ID"];
+      const csv = [header.join(",")].concat(rows.map(r=>[
+        r.idx, csvCell(r.name), csvCell(r.address), r.rating, r.ratingCount, r.type, r.place_id
+      ].join(","))).join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+      downloadBlob(`poi_${poiSel.value||'all'}_${Date.now()}.csv`, blob);
+    });
+    function csvCell(val){
+      const s = (val != null ? val : '').toString().replace(/"/g,'""');
+      return `"${s}"`;
+    }
+
+    document.getElementById('btnExportXLSX').addEventListener('click', ()=>{
+      const rows = currentPOISelection();
+      if(!rows.length){ alert('Nothing to export. Choose a category after scanning.'); return; }
+      const data = [["#", "Name", "Address", "Rating", "Ratings Count", "Type", "Place ID"]]
+        .concat(rows.map(r=>[r.idx, r.name, r.address, r.rating, r.ratingCount, r.type, r.place_id]));
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "POI");
+      const ab = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+      const blob = new Blob([ab], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      downloadBlob(`poi_${poiSel.value||'all'}_${Date.now()}.xlsx`, blob);
+    });
+
+    // Tab map reflow
+    document.querySelectorAll('#mainTabs button[data-bs-toggle="tab"]').forEach(btn=>{
+      btn.addEventListener('shown.bs.tab', e=>{
+        if(window.google){
+          if(e.target.id==='tab-prop' && map1){ const c=map1.getCenter(); google.maps.event.trigger(map1,'resize'); map1.setCenter(c); }
+          if(e.target.id==='tab-retail' && map2){ const c=map2.getCenter(); google.maps.event.trigger(map2,'resize'); map2.setCenter(c); }
+        }
+      });
+    });
+
+    // Init unit labels
+    updateUnitLabels();
+
+    // ---------- OpenAI Modal ----------
+    const openaiModal = new bootstrap.Modal(document.getElementById('openaiModal'));
+    document.getElementById('btnOpenAIModal').addEventListener('click', ()=> openaiModal.show());
+
+    document.getElementById('btnCtxProperty').addEventListener('click', ()=>{
+      const ctx = buildPropertyContext();
+      const ta = document.getElementById('openaiPrompt');
+      ta.value = (ta.value ? ta.value + "\n\n" : "") + ctx;
+      ta.focus();
+    });
+    document.getElementById('btnCtxRetail').addEventListener('click', ()=>{
+      const ctx = buildRetailContext();
+      const ta = document.getElementById('openaiPrompt');
+      ta.value = (ta.value ? ta.value + "\n\n" : "") + ctx;
+      ta.focus();
+    });
+
+    function buildPropertyContext(){
+      const loc = document.getElementById('propLatLng').textContent || '—';
+      const size = document.getElementById('propSize').value || '—';
+      const unit = UNIT();
+      const val = document.getElementById('propVal').textContent || '—';
+      const gy = document.getElementById('propYield').textContent || '—';
+      const ny = document.getElementById('propYieldNet').textContent || '—';
+      return `PROPERTY CONTEXT:
+- LatLng: ${loc}
+- Size: ${size} ${unit}
+- Estimated Value: ${val}
+- Gross Yield: ${gy}
+- Net Yield: ${ny}
+Please analyze investment attractiveness, risk factors, and negotiation pointers.`;
+    }
+
+    function buildRetailContext(){
+      if(!lastRetailScan) return `RETAIL CONTEXT: (no scan yet)`;
+      const c = lastRetailScan;
+      return `RETAIL CONTEXT:
+- Center: ${c.center.lat.toFixed(6)}, ${c.center.lng.toFixed(6)}
+- Radius: ${c.radius} m
+- Filters: rating>=${c.minRating||'any'}; open=${c.openNow}; keyword=${c.keyword||'N/A'}
+- Counts by type: ${JSON.stringify(c.counts)}
+- Average ratings by type: ${JSON.stringify(c.ratings)}
+Please summarize trade area strengths/weaknesses for a general retail concept and suggest 3 categories that would likely perform well.`;
+    }
+
+    document.getElementById('btnRunOpenAI').addEventListener('click', async ()=>{
+      const prompt = document.getElementById('openaiPrompt').value.trim();
+      if(!prompt){ alert('Write a prompt first.'); return; }
+      const overrideKey = document.getElementById('openaiKeyInput').value.trim();
+      const model = document.getElementById('openaiModel').value;
+      const key = overrideKey || OPENAI_KEY;
+      if(!key){ alert('Set OpenAI API key in code or paste one in the modal.'); return; }
+
+      const outEl = document.getElementById('openaiOutput');
+      outEl.textContent = 'Generating...';
+
+      try{
+        const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${key}` },
+          body: JSON.stringify({ model, messages: [{role:'user', content: prompt}], temperature: 0.2 })
+        });
+        if(!resp.ok){
+          const t = await resp.text();
+          throw new Error(`OpenAI error ${resp.status}: ${t}`);
+        }
+        const data = await resp.json();
+        const msg = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '(no content)';
+        outEl.textContent = msg;
+      }catch(err){
+        console.error(err);
+        outEl.textContent = `Failed: ${err.message}\n\n(If CORS error, use a simple proxy endpoint.)`;
+      }
+    });
+  </script>
+</body>
+</html>
