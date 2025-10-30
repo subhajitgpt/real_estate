@@ -32,7 +32,12 @@
     <div class="container-fluid">
       <span class="navbar-brand fw-bold">🗺️ Geo + Pyodide Utilities</span>
       <span class="navbar-text">Property Estimator • Retail Feasibility • 100% Client-side</span>
-      <div class="ms-auto d-flex gap-2">
+      <div class="ms-auto d-flex gap-2 align-items-center">
+        <div class="input-group input-group-sm" style="width: 280px;">
+          <span class="input-group-text">🗺️</span>
+          <input id="gmapsKeyInput" type="password" class="form-control" placeholder="Enter Google Maps API Key">
+          <button id="btnLoadMaps" class="btn btn-outline-light">Load Maps</button>
+        </div>
         <button id="btnOpenAIModal" class="btn btn-light btn-sm">✨ OpenAI Prompt</button>
       </div>
     </div>
@@ -543,15 +548,51 @@ def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
     // ---------- Maps loader ----------
     function loadMaps(){
       if(mapsLoaded) return;
-      if(!GMAPS_KEY) { alert("Set your Google Maps API key in code (GMAPS_KEY)."); return; }
+      
+      // Get API key from input field, fallback to hardcoded value
+      const inputKey = document.getElementById('gmapsKeyInput').value.trim();
+      const apiKey = inputKey || GMAPS_KEY;
+      
+      if(!apiKey) { 
+        alert("Please enter your Google Maps API key in the field above."); 
+        document.getElementById('gmapsKeyInput').focus();
+        return; 
+      }
+      
       const s=document.createElement('script');
-      s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GMAPS_KEY)}&libraries=places`;
+      s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places`;
       s.async=true; s.defer=true;
-      s.onload=()=>{ mapsLoaded=true; initMap1(); initMap2(); };
-      s.onerror=()=>alert('Failed to load Google Maps. Check key/billing/referrers.');
+      s.onload=()=>{ 
+        mapsLoaded=true; 
+        initMap1(); 
+        initMap2(); 
+        // Update button state
+        document.getElementById('btnLoadMaps').textContent = 'Maps Loaded ✓';
+        document.getElementById('btnLoadMaps').disabled = true;
+        document.getElementById('btnLoadMaps').classList.remove('btn-outline-light');
+        document.getElementById('btnLoadMaps').classList.add('btn-success');
+      };
+      s.onerror=()=>{
+        alert('Failed to load Google Maps. Check your API key, billing, and referrer settings.');
+        document.getElementById('btnLoadMaps').textContent = 'Load Maps';
+        document.getElementById('btnLoadMaps').disabled = false;
+      };
       document.head.appendChild(s);
+      
+      // Show loading state
+      document.getElementById('btnLoadMaps').textContent = 'Loading...';
+      document.getElementById('btnLoadMaps').disabled = true;
     }
-    window.addEventListener('DOMContentLoaded', loadMaps);
+    
+    // Load maps when button is clicked
+    document.getElementById('btnLoadMaps').addEventListener('click', loadMaps);
+    
+    // Also allow Enter key in the input field to trigger loading
+    document.getElementById('gmapsKeyInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        loadMaps();
+      }
+    });
 
     // ---------- Map 1 (Property) ----------
     function initMap1(){
