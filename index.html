@@ -32,11 +32,6 @@
     <div class="container-fluid">
       <span class="navbar-text">Property Estimator • Retail Feasibility</span>
       <div class="ms-auto d-flex gap-2 align-items-center">
-        <div class="input-group input-group-sm" style="width: 280px;">
-          <span class="input-group-text">🗺️</span>
-          <input id="gmapsKeyInput" type="password" class="form-control" placeholder="Enter Google Maps API Key">
-          <button id="btnLoadMaps" class="btn btn-outline-light">Load Maps</button>
-        </div>
         <button id="btnOpenAIModal" class="btn btn-light btn-sm">✨ Ask Atlas</button>
       </div>
     </div>
@@ -314,8 +309,8 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="alert alert-warning small mb-3">
-            Paste a key below or set one in code. The modal buttons add context from the current page.
+          <div class="alert alert-info small mb-3">
+            The modal buttons add context from the current page. OpenAI key is configured in the application.
           </div>
           <div class="row g-3">
             <div class="col-md-4">
@@ -325,9 +320,7 @@
                 <button id="btnCtxRetail" class="btn btn-outline-secondary btn-sm" type="button">↘ Add Retail Context</button>
               </div>
               <hr>
-              <label class="form-label">Override OpenAI Key (optional)</label>
-              <input id="openaiKeyInput" class="form-control form-control-sm" placeholder="sk-...">
-              <label class="form-label mt-2">Model</label>
+              <label class="form-label">Model</label>
               <select id="openaiModel" class="form-select form-select-sm">
                 <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
                 <option value="gpt-4o">gpt-4o</option>
@@ -359,9 +352,54 @@
 
   <script>
     // =====================================================================================
-    // Set your keys here:
-    const GMAPS_KEY = "";   // <-- Google Maps key (required)
-    const OPENAI_KEY = ""; // Optional: set default OpenAI key, or leave blank to paste in modal
+    // Set your encrypted keys here:
+    const GMAPS_KEY_ENCRYPTED = "Qs5skmSuUzGSs5TwYxnoazaHLEgJ995LrvyyWiziwWdIzkyAfrYq";   // <-- Encrypted Google Maps key
+    const OPENAI_KEY_ENCRYPTED = "cOw7g0W4eGXznpOpZzSoOFmOIm04p+lSkou0OhHs9D1LxWarB5lzePb5ss9QHLpgM5w9TQu9xmagjqUtGv/+BG3lXsJgk1oA8orawWIylTpUvw81L6jveoKPlCtUy8AmbekhmX3uIhrCkZrZExCBemLlCXNY87VUh5e/NBfo0DtM/nzHYbxQfOD5h8dKL5ZPVr03dgup2HPxj5IBC/f1BjLgIrI="; // Optional: Encrypted OpenAI key
+    
+    // Keys will be decrypted when Pyodide is ready
+    let GMAPS_KEY = "";
+    let OPENAI_KEY = "";
+    
+    // Decrypt keys using Pyodide
+    async function decryptKeys() {
+      if (!pyReady || !pyodide) {
+        console.log('Pyodide not ready yet');
+        return;
+      }
+      
+      console.log('Starting key decryption...');
+      
+      try {
+        if (GMAPS_KEY_ENCRYPTED) {
+          console.log('Decrypting Google Maps key...');
+          pyodide.globals.set('encrypted_gmaps', GMAPS_KEY_ENCRYPTED);
+          GMAPS_KEY = await pyodide.runPythonAsync(`decrypt_key(encrypted_gmaps)`);
+          console.log('Google Maps key decrypted successfully:', GMAPS_KEY ? 'Yes' : 'No');
+        } else {
+          console.log('No encrypted Google Maps key found');
+        }
+        
+        if (OPENAI_KEY_ENCRYPTED) {
+          console.log('Decrypting OpenAI key...');
+          pyodide.globals.set('encrypted_openai', OPENAI_KEY_ENCRYPTED);
+          OPENAI_KEY = await pyodide.runPythonAsync(`decrypt_key(encrypted_openai)`);
+          console.log('OpenAI key decrypted successfully:', OPENAI_KEY ? 'Yes' : 'No');
+        } else {
+          console.log('No encrypted OpenAI key found');
+        }
+        
+        // Auto-load maps immediately after successful decryption
+        if (GMAPS_KEY && !mapsLoaded) {
+          console.log('Auto-loading Google Maps with decrypted key...');
+          loadMaps();
+        } else if (!GMAPS_KEY) {
+          console.log('Cannot load maps: no decrypted Google Maps key available');
+        }
+        
+      } catch (err) {
+        console.error('Key decryption failed:', err);
+      }
+    }
     // =====================================================================================
 
     let pyodide=null, pyReady=false;
@@ -407,11 +445,42 @@
     (async () => {
       pyodide = await loadPyodide();
       await pyodide.runPythonAsync(`
-import math, statistics, json, datetime
+import math, statistics, json, datetime, base64, hashlib
 try:
     from pyodide.ffi import to_py
 except Exception:
     def to_py(x): return x
+
+def decrypt_key(encrypted_data, passphrase="default_salt_2024"):
+    """Simple XOR decryption for API keys"""
+    try:
+        # Decode base64
+        encrypted_bytes = base64.b64decode(encrypted_data)
+        
+        # Create key from passphrase
+        key_hash = hashlib.sha256(passphrase.encode()).digest()
+        
+        # XOR decrypt
+        decrypted = bytearray()
+        for i, byte in enumerate(encrypted_bytes):
+            decrypted.append(byte ^ key_hash[i % len(key_hash)])
+        
+        return decrypted.decode('utf-8')
+    except Exception as e:
+        return ""
+
+def encrypt_key(plaintext, passphrase="default_salt_2024"):
+    """Helper function to encrypt keys (for development)"""
+    try:
+        key_hash = hashlib.sha256(passphrase.encode()).digest()
+        encrypted = bytearray()
+        
+        for i, char in enumerate(plaintext.encode('utf-8')):
+            encrypted.append(char ^ key_hash[i % len(key_hash)])
+        
+        return base64.b64encode(encrypted).decode('utf-8')
+    except Exception as e:
+        return ""
 
 def _to_num(x, default=0.0):
     try:
@@ -542,56 +611,50 @@ def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
     return json.dumps({"raw_score":score,"normalized_score":norm,"detail":detail})
       `);
       pyReady = true;
+      await decryptKeys(); // Decrypt keys after Pyodide is ready
+      
+      // Additional fallback attempt to load maps after a short delay
+      setTimeout(() => {
+        if (!mapsLoaded && GMAPS_KEY) {
+          console.log('Attempting fallback map loading...');
+          loadMaps();
+        }
+      }, 2000);
     })();
 
     // ---------- Maps loader ----------
     function loadMaps(){
-      if(mapsLoaded) return;
+      if(mapsLoaded) {
+        console.log('Maps already loaded');
+        return;
+      }
       
-      // Get API key from input field, fallback to hardcoded value
-      const inputKey = document.getElementById('gmapsKeyInput').value.trim();
-      const apiKey = inputKey || GMAPS_KEY;
+      // Use decrypted key
+      const apiKey = GMAPS_KEY;
       
       if(!apiKey) { 
-        alert("Please enter your Google Maps API key in the field above."); 
-        document.getElementById('gmapsKeyInput').focus();
+        console.error("No Google Maps API key available. Please ensure encrypted key is properly configured."); 
+        console.log("GMAPS_KEY_ENCRYPTED:", GMAPS_KEY_ENCRYPTED ? "Present" : "Missing");
+        console.log("GMAPS_KEY (decrypted):", GMAPS_KEY ? "Present" : "Missing");
         return; 
       }
       
+      console.log('Loading Google Maps...');
       const s=document.createElement('script');
       s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places`;
       s.async=true; s.defer=true;
       s.onload=()=>{ 
         mapsLoaded=true; 
+        console.log('Google Maps script loaded, initializing maps...');
         initMap1(); 
         initMap2(); 
-        // Update button state
-        document.getElementById('btnLoadMaps').textContent = 'Maps Loaded ✓';
-        document.getElementById('btnLoadMaps').disabled = true;
-        document.getElementById('btnLoadMaps').classList.remove('btn-outline-light');
-        document.getElementById('btnLoadMaps').classList.add('btn-success');
+        console.log('Google Maps loaded and initialized successfully');
       };
       s.onerror=()=>{
-        alert('Failed to load Google Maps. Check your API key, billing, and referrer settings.');
-        document.getElementById('btnLoadMaps').textContent = 'Load Maps';
-        document.getElementById('btnLoadMaps').disabled = false;
+        console.error('Failed to load Google Maps. Check your API key, billing, and referrer settings.');
       };
       document.head.appendChild(s);
-      
-      // Show loading state
-      document.getElementById('btnLoadMaps').textContent = 'Loading...';
-      document.getElementById('btnLoadMaps').disabled = true;
     }
-    
-    // Load maps when button is clicked
-    document.getElementById('btnLoadMaps').addEventListener('click', loadMaps);
-    
-    // Also allow Enter key in the input field to trigger loading
-    document.getElementById('gmapsKeyInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        loadMaps();
-      }
-    });
 
     // ---------- Map 1 (Property) ----------
     function initMap1(){
@@ -1114,10 +1177,9 @@ Please summarize trade area strengths/weaknesses for a general retail concept an
     document.getElementById('btnRunOpenAI').addEventListener('click', async ()=>{
       const prompt = document.getElementById('openaiPrompt').value.trim();
       if(!prompt){ alert('Write a prompt first.'); return; }
-      const overrideKey = document.getElementById('openaiKeyInput').value.trim();
       const model = document.getElementById('openaiModel').value;
-      const key = overrideKey || OPENAI_KEY;
-      if(!key){ alert('Set OpenAI API key in code or paste one in the modal.'); return; }
+      const key = OPENAI_KEY;
+      if(!key){ alert('OpenAI API key not configured. Please ensure encrypted key is properly set.'); return; }
 
       const outEl = document.getElementById('openaiOutput');
       outEl.textContent = 'Generating...';
