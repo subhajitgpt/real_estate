@@ -309,9 +309,6 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="alert alert-info small mb-3">
-            The modal buttons add context from the current page. OpenAI key is configured in the application.
-          </div>
           <div class="row g-3">
             <div class="col-md-4">
               <label class="form-label">Insert Context</label>
@@ -360,40 +357,42 @@
     let GMAPS_KEY = "";
     let OPENAI_KEY = "";
     
+    // Start aggressive key decryption as soon as possible
+    let decryptionAttempts = 0;
+    function attemptEarlyDecryption() {
+      if (pyReady && pyodide && !GMAPS_KEY && decryptionAttempts < 3) {
+        decryptionAttempts++;
+        decryptKeys();
+      }
+    }
+    
     // Decrypt keys using Pyodide
     async function decryptKeys() {
       if (!pyReady || !pyodide) {
-        console.log('Pyodide not ready yet');
         return;
       }
       
       console.log('Starting key decryption...');
       
       try {
-        if (GMAPS_KEY_ENCRYPTED) {
+        if (GMAPS_KEY_ENCRYPTED && !GMAPS_KEY) {
           console.log('Decrypting Google Maps key...');
           pyodide.globals.set('encrypted_gmaps', GMAPS_KEY_ENCRYPTED);
           GMAPS_KEY = await pyodide.runPythonAsync(`decrypt_key(encrypted_gmaps)`);
           console.log('Google Maps key decrypted successfully:', GMAPS_KEY ? 'Yes' : 'No');
-        } else {
-          console.log('No encrypted Google Maps key found');
+          
+          // Load maps immediately after successful decryption
+          if (GMAPS_KEY && !mapsLoaded) {
+            console.log('Loading Google Maps immediately after decryption...');
+            loadMaps();
+          }
         }
         
-        if (OPENAI_KEY_ENCRYPTED) {
+        if (OPENAI_KEY_ENCRYPTED && !OPENAI_KEY) {
           console.log('Decrypting OpenAI key...');
           pyodide.globals.set('encrypted_openai', OPENAI_KEY_ENCRYPTED);
           OPENAI_KEY = await pyodide.runPythonAsync(`decrypt_key(encrypted_openai)`);
           console.log('OpenAI key decrypted successfully:', OPENAI_KEY ? 'Yes' : 'No');
-        } else {
-          console.log('No encrypted OpenAI key found');
-        }
-        
-        // Auto-load maps immediately after successful decryption
-        if (GMAPS_KEY && !mapsLoaded) {
-          console.log('Auto-loading Google Maps with decrypted key...');
-          loadMaps();
-        } else if (!GMAPS_KEY) {
-          console.log('Cannot load maps: no decrypted Google Maps key available');
         }
         
       } catch (err) {
@@ -442,6 +441,9 @@
     document.addEventListener('click', (e)=>{ const t=e.target.closest('[data-copy]'); if(t) copyFrom(t.getAttribute('data-copy')); });
 
     // ---------- Pyodide init ----------
+    // Start multiple aggressive attempts
+    setInterval(attemptEarlyDecryption, 200);
+    
     (async () => {
       pyodide = await loadPyodide();
       await pyodide.runPythonAsync(`
@@ -612,14 +614,6 @@ def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
       `);
       pyReady = true;
       await decryptKeys(); // Decrypt keys after Pyodide is ready
-      
-      // Additional fallback attempt to load maps after a short delay
-      setTimeout(() => {
-        if (!mapsLoaded && GMAPS_KEY) {
-          console.log('Attempting fallback map loading...');
-          loadMaps();
-        }
-      }, 2000);
     })();
 
     // ---------- Maps loader ----------
