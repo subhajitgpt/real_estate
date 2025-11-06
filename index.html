@@ -6,25 +6,114 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    :root{ --ink:#0f172a; --muted:#677084; --soft:#e7eef5; --brand:#2563eb; --brand2:#7c3aed; }
+    :root{ --ink:#0f172a; --muted:#677084; --soft:#e7eef5; --brand:#2563eb; --brand2:#7c3aed; --card:#ffffff; }
     body{background:#f7f9fc;color:var(--ink)}
     .navbar{background:linear-gradient(90deg,#0ea5e9,#6366f1)}
     .navbar .navbar-brand,.navbar .navbar-text{color:#fff}
-    .card-soft{border:1px solid #e7eef5;box-shadow:0 2px 6px rgba(16,24,40,.04);background:#fff}
+    .card-soft{border:1px solid #e7eef5;box-shadow:0 4px 14px rgba(16,24,40,.06);background:var(--card);border-radius:18px}
     .mapbox{width:100%;height:440px;border:1px solid #e7eef5;border-radius:12px}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .prewrap{white-space:pre-wrap}
     .badge-soft{background:#eef2ff;color:#3730a3;border-radius:999px}
-    .nav-tabs.nav-tabs-scroll{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden}
-    .nav-tabs.nav-tabs-scroll .nav-link{white-space:nowrap}
     .nav-tabs{border-bottom:1px solid #e7eef5}
-    .nav-tabs.nav-tabs-scroll::-webkit-scrollbar{height:6px}
-    .nav-tabs.nav-tabs-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
     .stat{border:1px solid #e7eef5;border-radius:16px;padding:14px 16px;background:#fff}
     .stat .label{color:#677084;font-size:.9rem}
     .stat .value{font-weight:700;font-size:1.15rem}
     .btn-pill{border-radius:999px}
-    .legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+    .form-help{font-size:.85rem;color:#677084}
+    .finder-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    @media (max-width: 992px){ .finder-cards{grid-template-columns:1fr} }
+    .prop-card{border:1px solid #e7eef5;border-radius:16px;background:#fff;padding:14px;transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;}
+    .prop-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(20,30,60,.08)}
+    .prop-title{font-weight:800}
+    .pill{border-radius:999px;padding:.2rem .55rem;background:#f1f5ff;border:1px solid #e7eef5;font-size:.8rem}
+    .rating{display:inline-flex;align-items:center;gap:6px}
+    .rating .star{color:#f59e0b}
+    .next-steps-notice{
+      background:linear-gradient(135deg,#dc2626,#b91c1c);
+      color:white;
+      padding:16px;
+      margin-top:20px;
+      border-radius:12px;
+      text-align:center;
+      font-weight:bold;
+      box-shadow:0 4px 12px rgba(220,38,38,0.3);
+      border:2px solid #991b1b;
+    }
+    .next-steps-notice:hover{
+      transform:translateY(-1px);
+      box-shadow:0 6px 16px rgba(220,38,38,0.4);
+    }
+    
+    /* Chat Interface Styles */
+    .chat-message {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .chat-message.user {
+      flex-direction: row-reverse;
+    }
+    .chat-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .chat-avatar.user {
+      background: #0d6efd;
+      color: white;
+    }
+    .chat-avatar.assistant {
+      background: #198754;
+      color: white;
+    }
+    .chat-bubble {
+      max-width: 75%;
+      padding: 0.75rem 1rem;
+      border-radius: 1rem;
+      position: relative;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    .chat-bubble.user {
+      background: #0d6efd;
+      color: white;
+      border-bottom-right-radius: 0.25rem;
+    }
+    .chat-bubble.assistant {
+      background: white;
+      color: #333;
+      border: 1px solid #dee2e6;
+      border-bottom-left-radius: 0.25rem;
+    }
+    .chat-bubble.assistant.typing {
+      background: #f8f9fa;
+      font-style: italic;
+      color: #6c757d;
+    }
+    #chatContainer {
+      scroll-behavior: smooth;
+    }
+    #chatContainer::-webkit-scrollbar {
+      width: 6px;
+    }
+    #chatContainer::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    #chatContainer::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+    #chatContainer::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
   </style>
 </head>
 <body>
@@ -38,19 +127,112 @@
   </nav>
 
   <div class="container">
-    <!-- TABS -->
-    <ul class="nav nav-tabs nav-tabs-scroll" id="mainTabs" role="tablist">
+    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-retail" data-bs-toggle="tab" data-bs-target="#panel-retail" type="button" role="tab">1) Retail Location Feasibility</button>
+        <button class="nav-link active" id="tab-finder" data-bs-toggle="tab" data-bs-target="#panel-finder" type="button" role="tab">1) Property Finder (AI)</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-prop" data-bs-toggle="tab" data-bs-target="#panel-prop" type="button" role="tab">2) Property Value &amp; Rent Estimator</button>
+        <button class="nav-link" id="tab-retail" data-bs-toggle="tab" data-bs-target="#panel-retail" type="button" role="tab">2) Retail Location Feasibility</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-prop" data-bs-toggle="tab" data-bs-target="#panel-prop" type="button" role="tab">3) Property Value &amp; Rent Estimator</button>
       </li>
     </ul>
 
     <div class="tab-content py-3">
-      <!-- ===== Retail ===== -->
-      <div class="tab-pane fade show active" id="panel-retail" role="tabpanel">
+      <!-- ===== Property Finder (AI) ===== -->
+      <div class="tab-pane fade show active" id="panel-finder" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-lg-4">
+            <div class="card card-soft p-3">
+              <h6 class="mb-2">Find Housing Projects (Exact Map Names)</h6>
+              <div class="form-help mb-2">
+                Set preferences and we’ll return <b>project/society names</b> matching Google Maps so you can paste them into the search in Tab 2.
+              </div>
+              <div class="row g-2">
+                <div class="col-12">
+                  <label class="form-label">Country</label>
+                  <select id="pfCountry" class="form-select">
+                    <option value="India" selected>India</option>
+                    <option value="UAE">UAE</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">City</label>
+                  <input id="pfCity" class="form-control" placeholder="e.g., Kolkata, Dubai, Singapore">
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Currency</label>
+                  <select id="pfCurrency" class="form-select">
+                    <option value="INR" selected>₹ INR</option>
+                    <option value="AED">AED</option>
+                    <option value="USD">$ USD</option>
+                    <option value="SGD">SGD</option>
+                    <option value="GBP">£ GBP</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Apt Type</label>
+                  <select id="pfType" class="form-select">
+                    <option value="1 BHK">1 BHK</option>
+                    <option value="2 BHK" selected>2 BHK</option>
+                    <option value="3 BHK">3 BHK</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Budget</label>
+                  <input id="pfBudget" type="number" class="form-control" placeholder="e.g., 6500000">
+                  <div class="form-help">Numeric (in selected currency)</div>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Locality (optional)</label>
+                  <input id="pfLocality" class="form-control" placeholder="e.g., New Town, Marina, Downtown">
+                </div>
+              </div>
+              <div class="mt-3 d-grid gap-2">
+                <button id="btnFindProperties" class="btn btn-primary btn-pill" type="button">Find Projects</button>
+                <button id="btnClearPF" class="btn btn-outline-secondary btn-pill" type="button">Reset</button>
+              </div>
+              <div id="pfError" class="text-danger small mt-2 d-none"></div>
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="card card-soft p-3">
+              <div class="d-flex align-items-center justify-content-between">
+                <h6 class="mb-0">AI Suggestions (Projects/Societies)</h6>
+                <div class="d-flex gap-2">
+                  <button id="btnPFCopyNames" class="btn btn-outline-primary btn-sm" disabled>Copy Names</button>
+                  <button id="btnPFExportCSV" class="btn btn-outline-secondary btn-sm" disabled>Export CSV</button>
+                  <button id="btnPFExportXLSX" class="btn btn-outline-secondary btn-sm" disabled>Export XLSX</button>
+                </div>
+              </div>
+              <div class="form-help">Each project name is normalized to match its <b>Google Maps place name</b> when possible.</div>
+              <div id="pfSummary" class="mt-3 mono prewrap text-muted">—</div>
+
+              <div id="pfCards" class="finder-cards mt-2"></div>
+
+              <div class="table-responsive mt-3">
+                <table class="table table-sm table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>#</th><th>Project (Exact Map Name)</th><th>Area</th><th>Type</th><th>Size</th><th>Price</th><th>Band</th><th>Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pfTableBody"><tr><td colspan="8" class="text-muted">Run a search to populate results.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Next Steps Notice -->
+        <div class="next-steps-notice">
+          <strong>📍 Next Steps: Navigate to Tab 2 to analyze points of interest around selected projects, then proceed to Tab 3 for comprehensive rental yield calculations.</strong>
+        </div>
+      </div>
+
+      <!-- ===== Retail (Tab 2) ===== -->
+      <div class="tab-pane fade" id="panel-retail" role="tabpanel">
         <div class="row g-3">
           <div class="col-lg-7">
             <div class="card card-soft p-3">
@@ -62,7 +244,7 @@
               </div>
               <div class="position-relative my-2">
                 <span class="position-absolute" style="left:10px;top:50%;transform:translateY(-50%);opacity:.6">🔎</span>
-                <input id="searchBox2" class="form-control ps-5" placeholder="Search address, landmark, city...">
+                <input id="searchBox2" class="form-control ps-5" placeholder="Paste a project/society name here…">
               </div>
               <div id="map2" class="mapbox"></div>
 
@@ -115,11 +297,10 @@
           </div>
         </div>
 
-        <!-- Summary -->
         <div class="card card-soft p-3 mt-3">
           <div class="d-flex align-items-center justify-content-between">
             <h6 class="mb-0">Feasibility Summary</h6>
-            <button class="btn btn-sm btn-outline-secondary btn-pill" data-copy="retailBreakdown">Copy</button>
+            <button id="btnResetRetail" class="btn btn-sm btn-outline-secondary btn-pill">Reset</button>
           </div>
           <div class="row g-3 mt-1">
             <div class="col-md-2"><div class="stat"><div class="label">Raw Score</div><div id="retRaw" class="value">—</div></div></div>
@@ -141,7 +322,7 @@
           <pre id="retailBreakdown" class="form-control mono prewrap mt-2" style="min-height:110px;">—</pre>
         </div>
 
-        <!-- Flat POI List with Category + Export -->
+        <!-- Flat POI List -->
         <div class="card card-soft p-3 mt-3">
           <div class="d-flex flex-wrap gap-2 align-items-end">
             <div>
@@ -152,7 +333,7 @@
             </div>
             <div>
               <label class="form-label mb-1">Quick Filter (text)</label>
-              <input id="poiFilterText" class="form-control form-control-sm" placeholder="name/address contains...">
+              <input id="poiFilterText" class="form-control form-select-sm" placeholder="name/address contains...">
             </div>
             <div class="ms-auto d-flex gap-2">
               <button id="btnExportCSV" class="btn btn-outline-secondary btn-sm" type="button">Export CSV</button>
@@ -172,7 +353,7 @@
         </div>
       </div>
 
-      <!-- ===== Property ===== -->
+      <!-- ===== Estimator (Tab 3) ===== -->
       <div class="tab-pane fade" id="panel-prop" role="tabpanel">
         <div class="row g-3">
           <div class="col-lg-7">
@@ -198,7 +379,7 @@
                 <div class="col-4">
                   <label class="form-label">Currency</label>
                   <select id="currency" class="form-select">
-                    <option value="INR" selected>₹ INR</option><option value="AED">AED</option><option value="USD">USD</option>
+                    <option value="INR" selected>₹ INR</option><option value="AED">AED</option><option value="USD">$</option>
                   </select>
                 </div>
                 <div class="col-4">
@@ -300,43 +481,50 @@
     </div>
   </div>
 
-  <!-- OpenAI Floating Modal -->
+  <!-- OpenAI Modal -->
   <div class="modal fade" id="openaiModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h6 class="modal-title">✨ OpenAI Prompt</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Insert Context</label>
-              <div class="d-grid gap-2">
-                <button id="btnCtxProperty" class="btn btn-outline-secondary btn-sm" type="button">↘ Add Property Context</button>
-                <button id="btnCtxRetail" class="btn btn-outline-secondary btn-sm" type="button">↘ Add Retail Context</button>
-              </div>
-              <hr>
-              <label class="form-label">Model</label>
-              <select id="openaiModel" class="form-select form-select-sm">
-                <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
-                <option value="gpt-4o">gpt-4o</option>
-                <option value="gpt-4.1-mini">gpt-4.1-mini</option>
-              </select>
-            </div>
-            <div class="col-md-8">
-              <label class="form-label">Your Prompt</label>
-              <textarea id="openaiPrompt" class="form-control mono" rows="10" placeholder="Ask for insights..."></textarea>
-              <div class="d-flex justify-content-end gap-2 mt-2">
-                <button id="btnRunOpenAI" class="btn btn-primary" type="button">Generate</button>
-              </div>
-              <label class="form-label mt-3">Response</label>
-              <pre id="openaiOutput" class="form-control mono prewrap" style="min-height:160px">—</pre>
-            </div>
+          <h6 class="modal-title">✨ Ask Atlas - Real Estate AI Assistant</h6>
+          <div class="d-flex gap-2">
+            <button id="btnResetChat" class="btn btn-outline-secondary btn-sm" type="button">🔄 Reset</button>
+            <button id="btnStopChat" class="btn btn-outline-danger btn-sm d-none" type="button">⏹ Stop</button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
         </div>
-        <div class="modal-footer">
-          <small class="text-muted">Tip: add context first, then edit the prompt and click Generate.</small>
+        <div class="modal-body p-0">
+          <!-- Chat Messages Container -->
+          <div id="chatContainer" class="p-3" style="height: 300px; overflow-y: auto; background: #f8f9fa;">
+            <div class="text-center text-muted py-4">
+              <div class="mb-3">🏠✨</div>
+              <div>Welcome to Atlas! I'm your AI real estate assistant.</div>
+              <div class="small mt-2">Ask me about property analysis, market insights, or investment advice.</div>
+            </div>
+          </div>
+          
+          <!-- Chat Input Area -->
+          <div class="border-top p-3">
+            <div class="mb-3">
+              <label class="form-label small">Quick Context</label>
+              <div class="d-flex gap-2">
+                <button id="btnCtxProperty" class="btn btn-outline-secondary btn-sm flex-fill" type="button">📊 Property Data</button>
+                <button id="btnCtxRetail" class="btn btn-outline-secondary btn-sm flex-fill" type="button">🏪 Retail Analysis</button>
+              </div>
+            </div>
+            
+            <div class="input-group">
+              <textarea id="openaiPrompt" class="form-control" rows="2" placeholder="Ask Atlas anything about real estate..." style="resize: none;"></textarea>
+              <button id="btnRunOpenAI" class="btn btn-primary" type="button">
+                <span class="send-text">Send</span>
+                <span class="loading-text d-none">
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                  Thinking...
+                </span>
+              </button>
+            </div>
+            <div class="form-text small mt-1">💡 Tip: Use context buttons to add current analysis data to your message</div>
+          </div>
         </div>
       </div>
     </div>
@@ -348,310 +536,607 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
-    // =====================================================================================
-    // Set your encrypted keys here:
-    const GMAPS_KEY_ENCRYPTED = "Qs5skmSuUzGSs5TwYxnoazaHLEgJ995LrvyyWiziwWdIzkyAfrYq";   // <-- Encrypted Google Maps key
-    const OPENAI_KEY_ENCRYPTED = "cOw7g0W4eGXznpOpZzSoOFmOIm04p+lSkou0OhHs9D1LxWarB5lzePb5ss9QHLpgM5w9TQu9xmagjqUtGv/+BG3lXsJgk1oA8orawWIylTpUvw81L6jveoKPlCtUy8AmbekhmX3uIhrCkZrZExCBemLlCXNY87VUh5e/NBfo0DtM/nzHYbxQfOD5h8dKL5ZPVr03dgup2HPxj5IBC/f1BjLgIrI="; // Optional: Encrypted OpenAI key
-    
-    // Keys will be decrypted when Pyodide is ready
-    let GMAPS_KEY = "";
-    let OPENAI_KEY = "";
-    
-    // Start aggressive key decryption as soon as possible
-    let decryptionAttempts = 0;
-    function attemptEarlyDecryption() {
-      if (pyReady && pyodide && !GMAPS_KEY && decryptionAttempts < 3) {
-        decryptionAttempts++;
-        decryptKeys();
+    // =======================================================
+    // Encrypted keys (no UI)
+    const GMAPS_KEY_ENCRYPTED = "Qs5skmSuUzGSs5TwYxnoazaHLEgJ995LrvyyWiziwWdIzkyAfrYq";
+    const OPENAI_KEY_ENCRYPTED = "cOw7g0W4eGXznpOpZzSoOFmOIm04p+lSkou0OhHs9D1LxWarB5lzePb5ss9QHLpgM5w9TQu9xmagjqUtGv/+BG3lXsJgk1oA8orawWIylTpUvw81L6jveoKPlCtUy8AmbekhmX3uIhrCkZrZExCBemLlCXNY87VUh5e/NBfo0DtM/nzHYbxQfOD5h8dKL5ZPVr03dgup2HPxj5IBC/f1BjLgIrI=";
+
+    let GMAPS_KEY="", OPENAI_KEY="";
+    let pyodide=null, pyReady=false, mapsLoaded=false;
+
+    // ---------- Pyodide init & decrypt ----------
+    (async () => {
+      try{
+        pyodide = await loadPyodide();
+        await pyodide.runPythonAsync(`
+import base64, hashlib
+def decrypt_key(encrypted_data, passphrase="default_salt_2024"):
+    try:
+        encrypted_bytes = base64.b64decode(encrypted_data)
+        key_hash = hashlib.sha256(passphrase.encode()).digest()
+        out = bytearray()
+        for i, b in enumerate(encrypted_bytes):
+            out.append(b ^ key_hash[i % len(key_hash)])
+        return out.decode('utf-8')
+    except Exception:
+        return ""
+        `);
+        pyReady = true;
+        await decryptKeysAndLoad();
+      }catch(e){
+        console.error("Pyodide init failed", e);
+        fallbackNoKeys();
       }
-    }
-    
-    // Decrypt keys using Pyodide
-    async function decryptKeys() {
-      if (!pyReady || !pyodide) {
-        return;
-      }
-      
-      console.log('Starting key decryption...');
-      
-      try {
-        if (GMAPS_KEY_ENCRYPTED && !GMAPS_KEY) {
-          console.log('Decrypting Google Maps key...');
-          pyodide.globals.set('encrypted_gmaps', GMAPS_KEY_ENCRYPTED);
-          GMAPS_KEY = await pyodide.runPythonAsync(`decrypt_key(encrypted_gmaps)`);
-          console.log('Google Maps key decrypted successfully:', GMAPS_KEY ? 'Yes' : 'No');
-          
-          // Load maps immediately after successful decryption
-          if (GMAPS_KEY && !mapsLoaded) {
-            console.log('Loading Google Maps immediately after decryption...');
-            loadMaps();
+    })();
+
+    async function decryptKeysAndLoad(){
+      try{
+        if(pyReady && pyodide){
+          if (GMAPS_KEY_ENCRYPTED && !GMAPS_KEY){
+            pyodide.globals.set('enc_gmaps', GMAPS_KEY_ENCRYPTED);
+            GMAPS_KEY = await pyodide.runPythonAsync(`decrypt_key(enc_gmaps)`);
+          }
+          if (OPENAI_KEY_ENCRYPTED && !OPENAI_KEY){
+            pyodide.globals.set('enc_openai', OPENAI_KEY_ENCRYPTED);
+            OPENAI_KEY = await pyodide.runPythonAsync(`decrypt_key(enc_openai)`);
           }
         }
-        
-        if (OPENAI_KEY_ENCRYPTED && !OPENAI_KEY) {
-          console.log('Decrypting OpenAI key...');
-          pyodide.globals.set('encrypted_openai', OPENAI_KEY_ENCRYPTED);
-          OPENAI_KEY = await pyodide.runPythonAsync(`decrypt_key(encrypted_openai)`);
-          console.log('OpenAI key decrypted successfully:', OPENAI_KEY ? 'Yes' : 'No');
+      }catch(e){ console.warn("Decryption error", e); }
+      loadMapsIfKey();
+    }
+    function loadMapsIfKey(){
+      if(mapsLoaded || !GMAPS_KEY) return;
+      const s=document.createElement('script');
+      s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GMAPS_KEY)}&libraries=places`;
+      s.async=true; s.defer=true;
+      s.onload=()=>{ mapsLoaded=true; safeInitMaps(); };
+      s.onerror=()=>{ console.error('Failed to load Google Maps.'); };
+      document.head.appendChild(s);
+    }
+    function fallbackNoKeys(){ setTimeout(decryptKeysAndLoad, 1200); }
+
+    // =======================================================
+    // Finder helpers
+    const pfCardsEl = ()=>document.getElementById('pfCards');
+    const pfSummaryEl = ()=>document.getElementById('pfSummary');
+    const pfTableBody = ()=>document.getElementById('pfTableBody');
+    const pfBtnCSV = ()=>document.getElementById('btnPFExportCSV');
+    const pfBtnXLSX = ()=>document.getElementById('btnPFExportXLSX');
+    const pfBtnCopyNames = ()=>document.getElementById('btnPFCopyNames');
+    let pfResults = [];
+
+    function pfCurrencySymbol(c){ return ({"INR":"₹","AED":"AED ","USD":"$","SGD":"S$","GBP":"£"})[c] || ""; }
+    function fmtMoney(n, cur){ if(n==null || isNaN(n)) return "-"; const sym = pfCurrencySymbol(cur); return sym + Math.round(Number(n)).toLocaleString(); }
+    function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+
+    // Build OpenAI prompt
+    function pfPrompt(payload){
+      return [
+        { role: "system", content:
+"You are a meticulous real-estate analyst.\n\
+Return STRICT JSON with housing PROJECTS (societies/complexes) only.\n\
+Each \"project_name\" must be the EXACT Google Maps place name if possible.\n\n\
+Schema:\n\
+{\n\
+  \"summary\": \"1-3 bullets (city overview, price sanity, key trade-offs)\",\n\
+  \"picks\": [\n\
+    {\n\
+      \"project_name\": \"Exact Google Maps place name\",\n\
+      \"area\": \"Area/Locality\",\n\
+      \"apartment_type\": \"1 BHK | 2 BHK | 3 BHK\",\n\
+      \"size\": \"e.g., 1100 sqft\",\n\
+      \"price\": 0,\n\
+      \"price_band\": \"e.g., 65L–78L\",\n\
+      \"pros\": [\"bullet\", \"bullet\"],\n\
+      \"cons\": [\"bullet\"],\n\
+      \"notes\": \"Short reasoning (<=25 words)\"\n\
+    }\n\
+  ]\n\
+}" },
+        { role: "user", content:
+`Find housing projects (not individual units) for ${payload.type} in ${payload.city}, ${payload.country}.
+Currency=${payload.currency}; Budget=${payload.budget}; Preferred locality="${payload.locality || "(none)"}".
+Return 8–14 diverse, realistic projects. Size in sqft. Bands can vary ±20% around budget if needed for variety.` }
+      ];
+    }
+
+    // Heuristic fallback (16 candidates)
+    function localHeuristicFinder({country, city, currency, type, budget, locality}){
+      const areasByCity = {
+        "kolkata":["New Town","Salt Lake","Rajarhat","Tollygunge","Behala","Dum Dum","Ballygunge","Jadavpur","Ultadanga","Kasba","Baguiati","Garia","Narendrapur","EM Bypass","Lake Town","Barasat","Madhyamgram","Howrah","Park Street","Esplanade"],
+        "dubai":["Marina","JLT","Business Bay","Downtown","JVC","Barsha","Silicon Oasis","Mirdif","Discovery Gardens","Deira","Bur Dubai","Greens","Tecom","IMPZ","Sports City","Arjan"],
+        "singapore":["Tampines","Jurong East","Punggol","Serangoon","Bukit Timah","Toa Payoh","Kallang","Clementi","Queenstown","Woodlands","Sengkang","Yishun","Bukit Panjang","Hougang","Geylang","Novena"]
+      };
+      const suffixes = ["Heights","Residency","Enclave","Greens","Lakeview","Garden","Vista","Court","Paradise","Orchid","Crest","Grande","Harbour","Meadows","Valley","Arcade"];
+      const key = (city||"").toLowerCase().trim();
+      const pool = areasByCity[key] || ["Central","East","West","North","South","Midtown","Uptown","Riverside","Park","Harbour","Hill","Valley","Lake","Heights","Crescent","Arcade"];
+      const picks = [];
+      const base = Number(budget)||5000000;
+      for(let i=0;i<Math.min(16,pool.length);i++){
+        const bandLow = Math.round(base*(0.72+0.03*i));
+        const bandHigh= Math.round(bandLow*1.14);
+        const pseudo = pool[i] + " " + suffixes[i % suffixes.length];
+        picks.push({
+          project_name: pseudo,
+          area: pool[i],
+          apartment_type: type,
+          size: `${900 + 40*i} sqft`,
+          price: Math.round((bandLow+bandHigh)/2),
+          price_band: `${fmtMoney(bandLow,currency)}–${fmtMoney(bandHigh,currency)}`,
+          pros: ["Good connectivity","Reasonable social infra"],
+          cons: ["Check maintenance","Stock varies"],
+          notes: ""
+        });
+      }
+      return {
+        summary: `• ${city}: ${type} projects across ${picks.length} areas.\n• Bands are indicative; verify tower age & maintenance.\n• Prioritize metro, hospitals, schools.`,
+        picks
+      };
+    }
+
+    // Try to normalize each project_name to EXACT Google Maps place name via Places Text Search
+    async function enrichWithPlaceMeta(picks, city){
+      if(!window.google || !google.maps || !google.maps.places) return picks;
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+
+      function textSearchExact(q){
+        return new Promise(resolve=>{
+          service.textSearch({query:q}, (res, status)=>{
+            if(status===google.maps.places.PlacesServiceStatus.OK && res && res.length){
+              const r=res[0];
+              resolve({
+                name: r.name||"",
+                rating: (typeof r.rating==='number')?r.rating:null,
+                lat: r.geometry?.location?.lat?.(),
+                lng: r.geometry?.location?.lng?.(),
+                vicinity: r.vicinity || r.formatted_address || ""
+              });
+            } else resolve(null);
+          });
+        });
+      }
+
+      const out=[];
+      for(const p of picks){
+        const query = (p.project_name && p.project_name.trim())
+          ? `${p.project_name}, ${city}`
+          : (p.area ? `${p.area} residential complex, ${city}` : city);
+        try{
+          const meta = await textSearchExact(query);
+          const resolvedName = meta?.name || p.project_name || "";
+          out.push({...p, project_name: resolvedName, g_rating: meta?.rating ?? null, lat: meta?.lat ?? null, lng: meta?.lng ?? null, vicinity: meta?.vicinity || p.area || ""});
+        }catch{
+          out.push(p);
         }
-        
-      } catch (err) {
-        console.error('Key decryption failed:', err);
+      }
+      return out;
+    }
+
+    // --- Locality resolver (works globally)
+    async function resolveLocalityPoint(city, locality){
+      if(!locality || !window.google || !google.maps?.places) return null;
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      return new Promise(resolve=>{
+        service.textSearch({query:`${locality}, ${city}`}, (res, status)=>{
+          if(status===google.maps.places.PlacesServiceStatus.OK && res && res.length){
+            const r=res[0];
+            resolve({
+              lat: r.geometry?.location?.lat?.(),
+              lng: r.geometry?.location?.lng?.()
+            });
+          } else resolve(null);
+        });
+      });
+    }
+
+    // --- Utility distance
+    function distMeters(a,b){
+      if(!a||!b||typeof a.lat!=='number'||typeof a.lng!=='number'||typeof b.lat!=='number'||typeof b.lng!=='number') return Infinity;
+      const R=6371000, toRad=x=>x*Math.PI/180;
+      const dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng);
+      const la=toRad(a.lat), lb=toRad(b.lat);
+      const h=Math.sin(dLat/2)**2 + Math.cos(la)*Math.cos(lb)*Math.sin(dLng/2)**2;
+      return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+    }
+
+    // --- Strict filter with parameters (DEFAULT RADIUS NOW 2000 m)
+    function applyFinderFilters(payload, picks, localityPoint, opts={}){
+      const price = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+      const BUDGET = Number(payload.budget || 0);
+      const TYPE = (payload.type || '').trim();
+      const PRICE_SLACK_PCT = opts.priceSlackPct ?? 15;   // ±15%
+      const LOC_RADIUS_M     = opts.locRadiusM    ?? 2000; // ***** 2 km default *****
+      const requireGeometry  = !!opts.requireGeometry;
+      const hasLocality = !!localityPoint;
+
+      const minPrice = BUDGET * (1 - PRICE_SLACK_PCT/100);
+      const maxPrice = BUDGET * (1 + PRICE_SLACK_PCT/100);
+
+      return (picks || []).filter(p=>{
+        if (TYPE && p.apartment_type && p.apartment_type !== TYPE) return false;
+
+        const pr = price(p.price);
+        if (BUDGET > 0 && pr !== null){
+          if (pr < minPrice || pr > maxPrice) return false;
+        }
+
+        if (hasLocality){
+          if (typeof p.lat === 'number' && typeof p.lng === 'number'){
+            const d = distMeters(localityPoint, {lat: p.lat, lng: p.lng});
+            if (d > LOC_RADIUS_M) return false;
+          } else if (requireGeometry) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    // --- Relaxation ladder: keep radius locked at 2000 m; only relax price if needed
+    async function relaxAndFilter(payload, picks, localityPoint){
+      const TARGET = 10;
+      const radiusSteps = localityPoint ? [2000] : [35000]; // ***** lock to 2 km when locality specified *****
+      const priceSteps  = [15, 20, 25, 30, 35];
+
+      for (const r of radiusSteps){
+        for (const p of priceSteps){
+          const out = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:r, priceSlackPct:p, requireGeometry:true});
+          if (out.length >= TARGET) return {out, r, p, strictGeo:true};
+        }
+      }
+      for (const r of radiusSteps){
+        for (const p of priceSteps){
+          const out = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:r, priceSlackPct:p, requireGeometry:false});
+          if (out.length >= TARGET) return {out, r, p, strictGeo:false};
+        }
+      }
+      const fallback = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:radiusSteps.at(-1), priceSlackPct:priceSteps.at(-1), requireGeometry:false});
+      return {out: fallback, r: radiusSteps.at(-1), p: priceSteps.at(-1), strictGeo:false};
+    }
+
+    // --- NEW: Harvest nearby residential projects within 5 km if not enough results
+    async function harvestNearbyProjects({ localityPoint, city, currency, type, budget, needCount, priceSlackPct=25 }){
+      if(!window.google || !google.maps?.places || !localityPoint || !needCount) return [];
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      const center = new google.maps.LatLng(localityPoint.lat, localityPoint.lng);
+
+      // Helper: Nearby Search with pagination
+      function nearbyWithPagination(req, cap=60){
+        return new Promise(resolve=>{
+          let acc=[];
+          const handle = (res, status, pag)=>{
+            if(status===google.maps.places.PlacesServiceStatus.OK && res && res.length){
+              acc = acc.concat(res);
+              if(pag && pag.hasNextPage && acc.length<cap){
+                // Places API requires a small delay before calling nextPage
+                setTimeout(()=>pag.nextPage(), 1200);
+              } else resolve(acc);
+            } else {
+              resolve(acc);
+            }
+          };
+          service.nearbySearch(req, handle);
+        });
+      }
+
+      // Helper: simple Text Searches around city keywords
+      function textSearchMany(queries, cap=30){
+        return Promise.all(queries.map(q => new Promise(resolve=>{
+          service.textSearch({query:q}, (res, status)=>{
+            if(status===google.maps.places.PlacesServiceStatus.OK && res && res.length) resolve(res.slice(0,cap));
+            else resolve([]);
+          });
+        }))).then(arrs => arrs.flat());
+      }
+
+      // We’ll try nearbySearch with keywords + a few textSearch queries
+      const keywords = [
+        "apartment",
+        "residential complex",
+        "housing society",
+        "condominium",
+        "residential tower"
+      ];
+
+      const nearbyPromises = keywords.map(kw => nearbyWithPagination({
+        location: center,
+        radius: 2000,
+        keyword: kw
+      }, 60));
+
+      const textQueries = keywords.map(kw => `${kw} near ${city}`);
+      const [nearbyResults, textResults] = await Promise.all([
+        Promise.all(nearbyPromises).then(x=>x.flat()),
+        textSearchMany(textQueries, 30)
+      ]);
+
+      const merge = [...nearbyResults, ...textResults];
+
+      // Normalize, dedupe and keep within 5 km strictly
+      const seen = new Set();
+      const picked = [];
+      for(const r of merge){
+        const name = (r.name || "").trim();
+        const loc = r.geometry && r.geometry.location;
+        const lat = loc ? (typeof loc.lat==='function' ? loc.lat() : loc.lat) : null;
+        const lng = loc ? (typeof loc.lng==='function' ? loc.lng() : loc.lng) : null;
+        if(!name || typeof lat !== 'number' || typeof lng !== 'number') continue;
+        const d = distMeters(localityPoint, {lat, lng});
+        if(d > 2000) continue; // hard fence
+
+        const key = name.toLowerCase();
+        if(seen.has(key)) continue;
+        seen.add(key);
+
+        // Price heuristic: set near budget with band based on slack
+        const slack = Math.max(15, Math.min(40, priceSlackPct));
+        const low = Math.round(budget * (1 - slack/100));
+        const high = Math.round(budget * (1 + slack/100));
+        const approxPrice = Math.round((low + high)/2);
+
+        picked.push({
+          project_name: name,
+          area: r.vicinity || r.formatted_address || city || "",
+          apartment_type: type,
+          size: "", // unknown from Places
+          price: approxPrice,
+          price_band: `${fmtMoney(low, currency)}–${fmtMoney(high, currency)}`,
+          pros: ["Exact Maps match","Within 5 km of chosen locality"],
+          cons: ["Verify age, amenities & maintenance"],
+          notes: "",
+          g_rating: (typeof r.rating==='number') ? r.rating : null,
+          lat, lng
+        });
+
+        if(picked.length >= needCount) break;
+      }
+
+      return picked;
+    }
+
+    function renderFinder(summary, picks, currency){
+      pfSummaryEl().textContent = summary || "(no summary)";
+      pfCardsEl().innerHTML = (picks||[]).slice(0,12).map((p,i)=>{
+        const price = fmtMoney(p.price, currency);
+        const band = escapeHTML(p.price_band||"");
+        const title = escapeHTML(p.project_name || `Project ${i+1}`);
+        const area = escapeHTML(p.area||"-");
+        const apt = escapeHTML(p.apartment_type||"-");
+        const size = escapeHTML(p.size||"-");
+        const pros = (p.pros||[]).map(x=>`<span class="pill">${escapeHTML(x)}</span>`).join(" ");
+        const cons = (p.cons||[]).map(x=>`<span class="pill">${escapeHTML(x)}</span>`).join(" ");
+        const notes = escapeHTML(p.notes||"");
+        const gRating = (typeof p.g_rating==='number') ? `<span class="rating"><span class="star">★</span>${p.g_rating.toFixed(1)}</span>` : '';
+        return `
+          <div class="prop-card">
+            <div class="prop-title">${title}</div>
+            <div class="text-muted small mb-1">${area} • ${apt} • ${size || '—'}</div>
+            ${gRating ? `<div class="text-muted small mb-1">${gRating}</div>` : ''}
+            <div class="mt-1"><span class="price">${price}</span> <span class="text-muted">(${band})</span></div>
+            <div class="mt-2">
+              <div class="text-muted small mb-1">Pros</div>
+              <div class="d-flex flex-wrap gap-1">${pros || '<span class="pill">—</span>'}</div>
+            </div>
+            <div class="mt-2">
+              <div class="text-muted small mb-1">Cons</div>
+              <div class="d-flex flex-wrap gap-1">${cons || '<span class="pill">—</span>'}</div>
+            </div>
+            <div class="mt-2 small text-muted">${notes}</div>
+          </div>`;
+      }).join("");
+
+      if(!picks.length){
+        pfTableBody().innerHTML = `<tr><td colspan="8" class="text-muted">No results returned. Try adjusting inputs.</td></tr>`;
+      } else {
+        pfTableBody().innerHTML = picks.map((p,i)=>{
+          const price = fmtMoney(p.price, currency);
+          const band = escapeHTML(p.price_band||"");
+          const title = escapeHTML(p.project_name || `Project ${i+1}`);
+          const area = escapeHTML(p.area||"-");
+          const apt = escapeHTML(p.apartment_type||"-");
+          const size = escapeHTML(p.size||"-");
+          const rating = (typeof p.g_rating==='number') ? p.g_rating.toFixed(1) : "";
+          return `<tr>
+            <td>${i+1}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${size}</td>
+            <td>${price}</td><td>${band}</td><td>${rating}</td>
+          </tr>`;
+        }).join("");
+        pfBtnCSV().disabled=false; pfBtnXLSX().disabled=false; pfBtnCopyNames().disabled=false;
       }
     }
-    // =====================================================================================
 
-    let pyodide=null, pyReady=false;
+    async function runPropertyFinder(){
+      const country = document.getElementById('pfCountry').value.trim();
+      const city = (document.getElementById('pfCity').value || "").trim();
+      const currency = document.getElementById('pfCurrency').value;
+      const type = document.getElementById('pfType').value;
+      const budget = Number(document.getElementById('pfBudget').value || 0);
+      const locality = (document.getElementById('pfLocality').value || "").trim();
+
+      const errBox = document.getElementById('pfError');
+      errBox.classList.add('d-none');
+      if(!city){ errBox.textContent="Please enter a city."; errBox.classList.remove('d-none'); return; }
+      if(!(budget>0)){ errBox.textContent="Please enter a valid numeric budget."; errBox.classList.remove('d-none'); return; }
+
+      const payload = { country, city, currency, type, budget, locality };
+      const msgs = pfPrompt(payload);
+
+      pfSummaryEl().textContent = "Working… generating project suggestions…";
+      pfCardsEl().innerHTML = "";
+      pfTableBody().innerHTML = `<tr><td colspan="8" class="text-muted">Working...</td></tr>`;
+      pfBtnCSV().disabled = true; pfBtnXLSX().disabled = true; pfBtnCopyNames().disabled = true;
+
+      let parsed = null;
+      try{
+        if(!OPENAI_KEY) throw new Error("OpenAI key not configured");
+        const controller = new AbortController();
+        const t = setTimeout(()=>controller.abort(), 7000);
+        const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${OPENAI_KEY}` },
+          body: JSON.stringify({
+            model: "gpt-4.1",
+            temperature: 0.2,
+            response_format: { type: "json_object" },
+            messages: msgs
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(t);
+        if(!resp.ok){
+          const tx = await resp.text();
+          throw new Error(`OpenAI error ${resp.status}: ${tx.slice(0,120)}`);
+        }
+        const data = await resp.json();
+        const jsonText = (data?.choices?.[0]?.message?.content || "{}");
+        parsed = JSON.parse(jsonText);
+      }catch(e){
+        console.warn("OpenAI unavailable, using local heuristic. Reason:", e.message || e);
+        parsed = localHeuristicFinder(payload);
+      }
+
+      // Resolve locality coordinate (global)
+      let localityPoint = null;
+      try { localityPoint = await resolveLocalityPoint(city, locality); } catch {}
+
+      const picksRaw = Array.isArray(parsed.picks) ? parsed.picks : [];
+      let picks = await enrichWithPlaceMeta(picksRaw, city); // add exact map name + lat/lng when possible
+
+      // Relax and filter to get ~10 within 5 km of locality (if provided)
+      const beforeCount = picks.length;
+      const relaxed = await relaxAndFilter(payload, picks, localityPoint);
+      picks = relaxed.out;
+
+      // -------- NEW: Harvest within 5 km if locality is set and we still have < TARGET --------
+      const TARGET = 10;
+      let harvestedCount = 0;
+      if (localityPoint && picks.length < TARGET) {
+        try{
+          const need = TARGET - picks.length;
+          const harvested = await harvestNearbyProjects({
+            localityPoint,
+            city,
+            currency,
+            type,
+            budget,
+            needCount: need,
+            priceSlackPct: Math.max(relaxed.p, 25) // use relaxed price or 25%, whichever higher
+          });
+
+          // Merge-dedupe by name (case-insensitive)
+          const existingNames = new Set(picks.map(p=>(p.project_name||"").toLowerCase().trim()));
+          for(const h of harvested){
+            const key = (h.project_name||"").toLowerCase().trim();
+            if(!existingNames.has(key)){
+              picks.push(h);
+              existingNames.add(key);
+              harvestedCount++;
+              if(picks.length >= TARGET) break;
+            }
+          }
+        }catch(err){
+          console.warn("Harvest failed:", err);
+        }
+      }
+
+      // Hard limit to 12 for UI (cards/table show first 12)
+      pfResults = picks.slice(0, 12);
+
+      const localityTxt = localityPoint
+        ? `Locality center @ (${localityPoint.lat?.toFixed(4)}, ${localityPoint.lng?.toFixed(4)})`
+        : (locality ? `Locality "${locality}" not resolved` : `No locality filter`);
+
+      const finalSummary =
+        (parsed.summary ? parsed.summary + '\n' : '') +
+        `• Search completed for ${payload.type} properties in ${payload.city}\n` +
+        `• Found ${pfResults.length} matching projects within your budget and preferences`;
+
+      renderFinder(finalSummary, pfResults, currency);
+    }
+
+    document.getElementById('btnFindProperties').addEventListener('click', runPropertyFinder);
+    document.getElementById('btnClearPF').addEventListener('click', ()=>{
+      document.getElementById('pfCity').value="";
+      document.getElementById('pfBudget').value="";
+      document.getElementById('pfLocality').value="";
+      pfSummaryEl().textContent="—";
+      pfCardsEl().innerHTML="";
+      pfTableBody().innerHTML=`<tr><td colspan="8" class="text-muted">Run a search to populate results.</td></tr>`;
+      document.getElementById('pfError').classList.add('d-none');
+      pfResults = [];
+      pfBtnCSV().disabled = true; pfBtnXLSX().disabled = true; pfBtnCopyNames().disabled = true;
+    });
+
+    // Copy names + exports
+    document.getElementById('btnPFCopyNames').addEventListener('click', ()=>{
+      if(!pfResults.length) return;
+      const names = pfResults.map(p=>p.project_name || "").filter(Boolean).join("\n");
+      navigator.clipboard.writeText(names).then(()=>{
+        const btn = pfBtnCopyNames(); const old = btn.textContent;
+        btn.textContent = "Copied!"; setTimeout(()=>btn.textContent=old, 1200);
+      });
+    });
+    function csvCell(val){ const s = (val != null ? val : '').toString().replace(/"/g,'""'); return `"${s}"`; }
+    function downloadBlob(filename, blob){
+      const a = document.createElement('a'); const url = URL.createObjectURL(blob);
+      a.href = url; a.download = filename; a.style.display = 'none'; document.body.appendChild(a);
+      a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 100);
+    }
+    document.getElementById('btnPFExportCSV').addEventListener('click', ()=>{
+      if(!pfResults.length) return;
+      const header = ["Project (Exact Map Name)","Area","Type","Size","Price","Band","Rating"];
+      const rows = pfResults.map(p=>[
+        p.project_name||"", p.area||"", p.apartment_type||"", p.size||"",
+        p.price||"", p.price_band||"", (typeof p.g_rating==='number')?p.g_rating:""
+      ]);
+      const csv = [header.join(",")].concat(rows.map(r=>r.map(csvCell).join(","))).join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+      downloadBlob(`project_finder_${Date.now()}.csv`, blob);
+    });
+    document.getElementById('btnPFExportXLSX').addEventListener('click', ()=>{
+      if(!pfResults.length) return;
+      const data = [["Project (Exact Map Name)","Area","Type","Size","Price","Band","Rating"]]
+        .concat(pfResults.map(p=>[
+          p.project_name||"", p.area||"", p.apartment_type||"", p.size||"",
+          p.price||"", p.price_band||"", (typeof p.g_rating==='number')?p.g_rating:""
+        ]));
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Projects");
+      const ab = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+      const blob = new Blob([ab], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      downloadBlob(`project_finder_${Date.now()}.xlsx`, blob);
+    });
+
+    // ======================= MAPS: PROPERTY & RETAIL =======================
     let map1=null,map2=null, marker1=null,marker2=null, circle2=null;
     let placesService1=null, placesService2=null;
     let autocomplete1=null, autocomplete2=null;
-    let lastRetailScan=null;
-    let lastRetailResults=null;
-    let mapsLoaded=false;
+    let lastRetailScan=null, lastRetailResults=null;
 
     const DEFAULT_POI_TYPES = [
-      {type:'hospital',        label:'Hospitals',        weight:1.6, color:'#ef4444', emoji:'🏥'},
-      {type:'pharmacy',        label:'Pharmacies',       weight:1.4, color:'#f59e0b', emoji:'💊'},
-      {type:'doctor',          label:'Clinics',          weight:1.3, color:'#10b981', emoji:'🩺'},
-      {type:'ambulance',       label:'Ambulances',       weight:1.7, color:'#dc2626', emoji:'🚑'},
-      {type:'police',          label:'Police Stations',  weight:1.5, color:'#1f2937', emoji:'🚓'},
-      {type:'school',          label:'Schools',          weight:1.2, color:'#2563eb', emoji:'🏫'},
-      {type:'university',      label:'Universities',     weight:1.0, color:'#7c3aed', emoji:'🎓'},
-      {type:'gym',             label:'Gyms',             weight:0.6, color:'#0ea5e9', emoji:'🏋️'},
-      {type:'restaurant',      label:'Restaurants',      weight:0.8, color:'#16a34a', emoji:'🍽️'},
-      {type:'cafe',            label:'Cafés',            weight:0.7, color:'#dc2626', emoji:'☕'},
-      {type:'shopping_mall',   label:'Shopping Malls',   weight:1.0, color:'#ea580c', emoji:'🛍️'},
-      {type:'bank',            label:'Banks',            weight:0.5, color:'#64748b', emoji:'🏦'},
-      {type:'transit_station', label:'Transit',          weight:1.1, color:'#f59e0b', emoji:'🚌'},
-      {type:'subway_station',  label:'Metro/Subway',     weight:1.1, color:'#14b8a6', emoji:'🚇'},
-      {type:'supermarket',     label:'Supermarkets',     weight:0.9, color:'#9333ea', emoji:'🛒'},
-      {type:'store',           label:'Stores',           weight:0.4, color:'#475569', emoji:'🏪'}
+      {type:'hospital',label:'Hospitals',weight:1.6,color:'#ef4444',emoji:'🏥'},
+      {type:'pharmacy',label:'Pharmacies',weight:1.4,color:'#f59e0b',emoji:'💊'},
+      {type:'doctor',label:'Clinics',weight:1.3,color:'#10b981',emoji:'🩺'},
+      {type:'ambulance',label:'Ambulances',weight:1.7,color:'#dc2626',emoji:'🚑'},
+      {type:'police',label:'Police Stations',weight:1.5,color:'#1f2937',emoji:'🚓'},
+      {type:'school',label:'Schools',weight:1.2,color:'#2563eb',emoji:'🏫'},
+      {type:'university',label:'Universities',weight:1.0,color:'#7c3aed',emoji:'🎓'},
+      {type:'gym',label:'Gyms',weight:0.6,color:'#0ea5e9',emoji:'🏋️'},
+      {type:'restaurant',label:'Restaurants',weight:0.8,color:'#16a34a',emoji:'🍽️'},
+      {type:'cafe',label:'Cafés',weight:0.7,color:'#dc2626',emoji:'☕'},
+      {type:'shopping_mall',label:'Shopping Malls',weight:1.0,color:'#ea580c',emoji:'🛍️'},
+      {type:'bank',label:'Banks',weight:0.5,color:'#64748b',emoji:'🏦'},
+      {type:'transit_station',label:'Transit',weight:1.1,color:'#f59e0b',emoji:'🚌'},
+      {type:'subway_station',label:'Metro/Subway',weight:1.1,color:'#14b8a6',emoji:'🚇'},
+      {type:'supermarket',label:'Supermarkets',weight:0.9,color:'#9333ea',emoji:'🛒'},
+      {type:'store',label:'Stores',weight:0.4,color:'#475569',emoji:'🏪'}
     ];
 
-    const CURRENCY_SYMBOL = { INR:'₹', AED:'AED ', USD:'$' };
-    const SQ_CONV = { sqft:1, sqm:10.7639 };
-    const CURRENCY = ()=>CURRENCY_SYMBOL[document.getElementById('currency').value]||'';
-    const UNIT = ()=>document.getElementById('unit').value;
-    const U2SQFT = ()=>SQ_CONV[UNIT()]||1;
-    const fmtMoney = n => (n==null||isNaN(n)) ? '-' : (CURRENCY()+Math.round(n).toLocaleString());
-    const fmtPct = n => (n==null||isNaN(n)) ? '-' : (n.toFixed(2)+' %');
-    const updateUnitLabels=()=>document.querySelectorAll('.unit-label').forEach(e=>e.textContent=UNIT());
-    document.getElementById('unit').addEventListener('change', updateUnitLabels);
-    const copyFrom = id => { if(navigator.clipboard && document.getElementById(id)) navigator.clipboard.writeText(document.getElementById(id).textContent||''); };
-    document.addEventListener('click', (e)=>{ const t=e.target.closest('[data-copy]'); if(t) copyFrom(t.getAttribute('data-copy')); });
+    function safeInitMaps(){ try{ initMap1(); }catch(e){ console.warn("Map1 init error", e); } try{ initMap2(); }catch(e){ console.warn("Map2 init error", e); } }
 
-    // ---------- Pyodide init ----------
-    // Start multiple aggressive attempts
-    setInterval(attemptEarlyDecryption, 200);
-    
-    (async () => {
-      pyodide = await loadPyodide();
-      await pyodide.runPythonAsync(`
-import math, statistics, json, datetime, base64, hashlib
-try:
-    from pyodide.ffi import to_py
-except Exception:
-    def to_py(x): return x
-
-def decrypt_key(encrypted_data, passphrase="default_salt_2024"):
-    """Simple XOR decryption for API keys"""
-    try:
-        # Decode base64
-        encrypted_bytes = base64.b64decode(encrypted_data)
-        
-        # Create key from passphrase
-        key_hash = hashlib.sha256(passphrase.encode()).digest()
-        
-        # XOR decrypt
-        decrypted = bytearray()
-        for i, byte in enumerate(encrypted_bytes):
-            decrypted.append(byte ^ key_hash[i % len(key_hash)])
-        
-        return decrypted.decode('utf-8')
-    except Exception as e:
-        return ""
-
-def encrypt_key(plaintext, passphrase="default_salt_2024"):
-    """Helper function to encrypt keys (for development)"""
-    try:
-        key_hash = hashlib.sha256(passphrase.encode()).digest()
-        encrypted = bytearray()
-        
-        for i, char in enumerate(plaintext.encode('utf-8')):
-            encrypted.append(char ^ key_hash[i % len(key_hash)])
-        
-        return base64.b64encode(encrypted).decode('utf-8')
-    except Exception as e:
-        return ""
-
-def _to_num(x, default=0.0):
-    try:
-        return float(x)
-    except Exception:
-        return float(default)
-
-def _coerce_rows(lst, kind):
-    try:
-        lst = to_py(lst)
-    except Exception:
-        pass
-    out = []
-    for it in (lst or []):
-        try:
-            d = dict(it)
-        except Exception:
-            d = {}
-            for k in ('size','price','rent'):
-                try:
-                    d[k] = it[k] if (hasattr(it,'__getitem__')) else getattr(it, k, None)
-                except Exception:
-                    d[k] = None
-        if kind == 'sale':
-            size = _to_num(d.get('size', 0))
-            price = _to_num(d.get('price', 0))
-            if size > 0 and price > 0:
-                out.append({'size': size, 'price': price})
-        else:
-            size = _to_num(d.get('size', 0))
-            rent = _to_num(d.get('rent', 0))
-            if size > 0 and rent > 0:
-                out.append({'size': size, 'rent': rent})
-    return out
-
-def estimate_property(
-    size_sqft,
-    comp_sales,
-    comp_rents,
-    lat=None, lng=None, year_built=None,
-    cond_premium_pct=0.0, age_dep_pct_per_year=0.0,
-    vac_pct=0.0, maint_pct=0.0,
-    target_yield_pct=0.0,
-    fallback_cap_rate=0.06
-):
-    size_sqft = _to_num(size_sqft, 0)
-    cond_premium_pct = _to_num(cond_premium_pct, 0)
-    age_dep_pct_per_year = _to_num(age_dep_pct_per_year, 0)
-    vac_pct = _to_num(vac_pct, 0)
-    maint_pct = _to_num(maint_pct, 0)
-    target_yield_pct = _to_num(target_yield_pct, 0)
-
-    comp_sales = _coerce_rows(comp_sales, 'sale')
-    comp_rents = _coerce_rows(comp_rents, 'rent')
-
-    if not comp_sales and not comp_rents:
-        raise ValueError("Need at least one sale or one rent comparable.")
-
-    psf = [r['price']/r['size'] for r in comp_sales if r['size']>0 and r['price']>0]
-    rpsf= [r['rent']/r['size']  for r in comp_rents if r['size']>0 and r['rent']>0]
-
-    med_psf = statistics.median(psf) if psf else None
-
-    prem = max(0.0, cond_premium_pct/100.0)
-    dep_mult = 1.0
-    if year_built:
-        try:
-            y=int(year_built); yrs=max(0, datetime.datetime.now().year - y)
-            dep_mult=max(0.6, 1.0 - (age_dep_pct_per_year/100.0)*yrs)
-        except Exception:
-            pass
-
-    est_val = None
-    if med_psf is not None:
-        est_val = med_psf*size_sqft*dep_mult*(1.0+prem)
-
-    med_rpsf=None; est_rent_mo=None; gross=None; net=None
-    if rpsf:
-        med_rpsf=statistics.median(rpsf)
-        est_rent_mo=None
-        est_rent_mo=med_rpsf*size_sqft
-        if est_rent_mo and est_rent_mo>0:
-            annual=est_rent_mo*12.0
-            if est_val:
-                gross = (annual / est_val) * 100.0
-                vac_amt = (vac_pct/100.0)*annual
-                maint_amt = (maint_pct/100.0)*est_val
-                net = ((annual - vac_amt - maint_amt) / est_val) * 100.0
-            else:
-                ty = max(0.0, target_yield_pct/100.0)
-                if ty > 0:
-                    net_income = annual * (1.0 - vac_pct/100.0)
-                    est_val = net_income / ty
-                else:
-                    est_val = annual / max(1e-6, float(fallback_cap_rate))
-
-    return json.dumps({
-        "median_sale_psf": med_psf,
-        "median_rent_psf": med_rpsf,
-        "estimated_value": est_val,
-        "estimated_rent_month": est_rent_mo,
-        "gross_yield_pct": gross,
-        "net_yield_pct": net,
-        "lat": lat, "lng": lng,
-        "size_sqft": size_sqft,
-        "year_built": year_built,
-        "dep_mult": dep_mult,
-        "premium_pct": prem*100.0
-    })
-
-def fair_value_from_target_yield(annual_net_rent, target_yield_pct):
-    ty=float(target_yield_pct)/100.0
-    return None if ty<=0 else annual_net_rent/ty
-
-def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
-    try:
-        counts_by_type = to_py(counts_by_type)
-        avg_rating_by_type = to_py(avg_rating_by_type)
-        weights = to_py(weights)
-    except Exception:
-        pass
-    score=0.0; detail={}
-    keys=set(list((counts_by_type or {}).keys())+list((weights or {}).keys())+list((avg_rating_by_type or {}).keys()))
-    for t in keys:
-        c=float(counts_by_type.get(t,0) or 0); w=float(weights.get(t,0) or 0); r=float(avg_rating_by_type.get(t,0) or 0)
-        rb=max(0.0,(r-3.0)*0.5); part=w*(c+rb); detail[t]={"count":c,"weight":w,"avg_rating":r,"component":part}; score+=part
-    norm=score/max(1.0, math.log(max(10.0, float(radius_m or 1))))
-    return json.dumps({"raw_score":score,"normalized_score":norm,"detail":detail})
-      `);
-      pyReady = true;
-      await decryptKeys(); // Decrypt keys after Pyodide is ready
-    })();
-
-    // ---------- Maps loader ----------
-    function loadMaps(){
-      if(mapsLoaded) {
-        console.log('Maps already loaded');
-        return;
-      }
-      
-      // Use decrypted key
-      const apiKey = GMAPS_KEY;
-      
-      if(!apiKey) { 
-        console.error("No Google Maps API key available. Please ensure encrypted key is properly configured."); 
-        console.log("GMAPS_KEY_ENCRYPTED:", GMAPS_KEY_ENCRYPTED ? "Present" : "Missing");
-        console.log("GMAPS_KEY (decrypted):", GMAPS_KEY ? "Present" : "Missing");
-        return; 
-      }
-      
-      console.log('Loading Google Maps...');
-      const s=document.createElement('script');
-      s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places`;
-      s.async=true; s.defer=true;
-      s.onload=()=>{ 
-        mapsLoaded=true; 
-        console.log('Google Maps script loaded, initializing maps...');
-        initMap1(); 
-        initMap2(); 
-        console.log('Google Maps loaded and initialized successfully');
-      };
-      s.onerror=()=>{
-        console.error('Failed to load Google Maps. Check your API key, billing, and referrer settings.');
-      };
-      document.head.appendChild(s);
-    }
-
-    // ---------- Map 1 (Property) ----------
     function initMap1(){
+      if(!document.getElementById('map1')) return;
       map1=new google.maps.Map(document.getElementById('map1'),{center:{lat:22.5726,lng:88.3639},zoom:12,mapTypeControl:false});
       placesService1=new google.maps.places.PlacesService(map1);
       const input=document.getElementById('searchBox1');
@@ -675,6 +1160,7 @@ def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
       document.getElementById('propLatLng').textContent=`${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
     }
 
+    // Estimator small helpers
     function addRow(tableId,s='',v=''){
       const tbody=document.querySelector(`#${tableId} tbody`);
       const tr=document.createElement('tr');
@@ -697,7 +1183,7 @@ def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
     document.getElementById('btnPropDemo').addEventListener('click',()=>{
       document.querySelector('#tblCompSales tbody').innerHTML='';
       document.querySelector('#tblCompRents tbody').innerHTML='';
-      const sz=(UNIT()==='sqm')?110:1200;
+      const UNIT=document.getElementById('unit').value; const sz=(UNIT==='sqm')?110:1200;
       [9500000,9200000,9800000].forEach(v=>addRow('tblCompSales',sz,v));
       [28000,29500,27000].forEach(v=>addRow('tblCompRents',sz,v));
       document.getElementById('propSize').value=sz; document.getElementById('propYear').value=2017;
@@ -706,22 +1192,56 @@ def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
     });
 
     document.getElementById('btnResetProp').addEventListener('click',()=>{
-      ['propSize','propYear'].forEach(id=>document.getElementById(id).value=''); document.getElementById('condPremium').value=0; document.getElementById('condPremiumLbl').textContent='0';
-      document.querySelector('#tblCompSales tbody').innerHTML=''; document.querySelector('#tblCompRents tbody').innerHTML='';
+      // Reset form fields
+      ['propSize','propYear'].forEach(id=>document.getElementById(id).value='');
+      
+      // Reset sliders to default values
+      document.getElementById('condPremium').value=0; 
+      document.getElementById('condPremiumLbl').textContent='0';
+      document.getElementById('ageDep').value=0.5; 
+      document.getElementById('vacancy').value=5; 
+      document.getElementById('maint').value=1; 
+      document.getElementById('targetYield').value=4;
+      
+      // Clear tables and add default rows
+      document.querySelector('#tblCompSales tbody').innerHTML=''; 
+      document.querySelector('#tblCompRents tbody').innerHTML='';
       for(let i=0;i<3;i++){ addRow('tblCompSales'); addRow('tblCompRents'); }
+      
+      // Clear results
       ['propVal','propYield','propYieldNet','propPsfSale','propPsfRent','propRentMo'].forEach(id=>document.getElementById(id).textContent='—');
       document.getElementById('propResultsPre').textContent='—';
+      
+      // Clear map marker
+      if(marker1) { marker1.setMap(null); marker1 = null; }
+      
+      // Reset map to default center and zoom
+      if(map1) {
+        map1.setCenter({lat:22.5726,lng:88.3639});
+        map1.setZoom(12);
+      }
+      
+      // Clear search box
+      const searchBox = document.getElementById('searchBox1');
+      if(searchBox) searchBox.value = '';
     });
 
     document.getElementById('condPremium').addEventListener('input', e=>{
       document.getElementById('condPremiumLbl').textContent = e.target.value;
     });
 
-    // ----- Property Pyodide -----
+    function fmtMoneyEstimator(n){
+      const cur = {"INR":"₹","AED":"AED ","USD":"$"}[document.getElementById('currency').value]||"";
+      return (n==null||isNaN(n)) ? '-' : (cur + Math.round(n).toLocaleString());
+    }
+    function fmtPct(n){ return (n==null||isNaN(n)) ? '-' : (n.toFixed(2)+' %'); }
+
     document.getElementById('btnEstimate').addEventListener('click',async ()=>{
       try{
         if(!pyReady){ alert('Python engine is still loading. Please try again.'); return; }
-        const u2=U2SQFT();
+        const SQ_CONV = { sqft:1, sqm:10.7639 };
+        const UNIT = document.getElementById('unit').value;
+        const u2 = SQ_CONV[UNIT]||1;
         const size = parseFloat(document.getElementById('propSize').value||'0') * u2;
         if(!(size>0)){ alert('Enter a valid property size.'); return; }
         const yearStr=document.getElementById('propYear').value.trim();
@@ -735,48 +1255,123 @@ def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
           const s=parseFloat(tr.querySelector('.rent-size').value||'0')*u2; const r=parseFloat(tr.querySelector('.rent-price').value||'0'); if(s>0&&r>0) rents.push({size:s,rent:r});
         });
 
-        if(sales.length===0 && rents.length===0){
-          alert('Please add at least one sale or one rent comparable.'); return;
-        }
+        // Convert JavaScript arrays to Python-compatible format and set in globals
+        pyodide.globals.set('prop_size_sqft', size);
+        pyodide.globals.set('comp_sales_json', JSON.stringify(sales));
+        pyodide.globals.set('comp_rents_json', JSON.stringify(rents));
+        pyodide.globals.set('prop_lat', lat);
+        pyodide.globals.set('prop_lng', lng);
+        pyodide.globals.set('prop_year', year);
+        pyodide.globals.set('cond_premium', parseFloat(document.getElementById('condPremium').value||'0'));
+        pyodide.globals.set('age_depreciation', parseFloat(document.getElementById('ageDep').value||'0'));
+        pyodide.globals.set('vacancy_rate', parseFloat(document.getElementById('vacancy').value||'0'));
+        pyodide.globals.set('maintenance_rate', parseFloat(document.getElementById('maint').value||'0'));
+        pyodide.globals.set('target_yield', parseFloat(document.getElementById('targetYield').value||'0'));
 
-        const payload = {
-          size_sqft: size,
-          sales, rents,
-          lat, lng, year,
-          condPremium: parseFloat(document.getElementById('condPremium').value||'0'),
-          ageDep: parseFloat(document.getElementById('ageDep').value||'0'),
-          vac: parseFloat(document.getElementById('vacancy').value||'0'),
-          maint: parseFloat(document.getElementById('maint').value||'0'),
-          targetYield: parseFloat(document.getElementById('targetYield').value||'0')
-        };
-        pyodide.globals.set('prop_payload', JSON.stringify(payload));
+        const code = `
+import math, statistics, json, datetime
 
-        const out = await pyodide.runPythonAsync(`
-import json
-p=json.loads(prop_payload)
-estimate_property(
-    p["size_sqft"],
-    p["sales"],
-    p["rents"],
-    p.get("lat"), p.get("lng"), p.get("year"),
-    p.get("condPremium",0), p.get("ageDep",0),
-    p.get("vac",0), p.get("maint",0), p.get("targetYield",0)
+def _to_num(x, default=0.0):
+    try: return float(x)
+    except: return float(default)
+
+def _coerce_rows(lst, kind):
+    out=[]
+    for it in (lst or []):
+        d=dict(it)
+        if kind=='sale':
+            size=_to_num(d.get('size',0)); price=_to_num(d.get('price',0))
+            if size>0 and price>0: out.append({'size':size,'price':price})
+        else:
+            size=_to_num(d.get('size',0)); rent=_to_num(d.get('rent',0))
+            if size>0 and rent>0: out.append({'size':size,'rent':rent})
+    return out
+
+def estimate_property(size_sqft, comp_sales, comp_rents, lat=None, lng=None, year_built=None, cond_premium_pct=0.0, age_dep_pct_per_year=0.0, vac_pct=0.0, maint_pct=0.0, target_yield_pct=0.0, fallback_cap_rate=0.06):
+    size_sqft=_to_num(size_sqft,0)
+    comp_sales=_coerce_rows(comp_sales,'sale'); comp_rents=_coerce_rows(comp_rents,'rent')
+    if not comp_sales and not comp_rents:
+        raise ValueError("Need at least one sale or one rent comparable.")
+    psf=[r['price']/r['size'] for r in comp_sales if r['size']>0 and r['price']>0]
+    rpsf=[r['rent']/r['size'] for r in comp_rents if r['size']>0 and r['rent']>0]
+    med_psf=statistics.median(psf) if psf else None
+    prem=max(0.0, cond_premium_pct/100.0)
+    dep_mult=1.0
+    if year_built:
+        try:
+            y=int(year_built); yrs=max(0, datetime.datetime.now().year - y)
+            dep_mult=max(0.6, 1.0 - (age_dep_pct_per_year/100.0)*yrs)
+        except: pass
+    est_val=None
+    if med_psf is not None:
+        est_val=med_psf*size_sqft*dep_mult*(1.0+prem)
+    med_rpsf=None; est_rent_mo=None; gross=None; net=None
+    if rpsf:
+        med_rpsf=statistics.median(rpsf)
+        est_rent_mo=med_rpsf*size_sqft
+        if est_rent_mo and est_rent_mo>0:
+            annual=est_rent_mo*12.0
+            if est_val:
+                gross = (annual / est_val) * 100.0
+                vac_amt = (vac_pct/100.0)*annual
+                maint_amt = (maint_pct/100.0)*est_val
+                net = ((annual - vac_amt - maint_amt) / est_val) * 100.0
+            else:
+                ty = max(0.0, target_yield_pct/100.0)
+                if ty > 0:
+                    net_income = annual * (1.0 - vac_pct/100.0)
+                    est_val = net_income / ty
+                else:
+                    est_val = annual / max(1e-6, float(fallback_cap_rate))
+    return json.dumps({
+        "median_sale_psf": med_psf,
+        "median_rent_psf": med_rpsf,
+        "estimated_value": est_val,
+        "estimated_rent_month": est_rent_mo,
+        "gross_yield_pct": gross,
+        "net_yield_pct": net,
+        "lat": lat, "lng": lng,
+        "size_sqft": size_sqft,
+        "year_built": year_built,
+        "dep_mult": dep_mult,
+        "premium_pct": prem*100.0
+    })
+
+# Parse JSON strings to Python objects
+comp_sales = json.loads(comp_sales_json) if comp_sales_json else []
+comp_rents = json.loads(comp_rents_json) if comp_rents_json else []
+
+# Get data from JavaScript globals and run estimation
+result = estimate_property(
+    prop_size_sqft, 
+    comp_sales, 
+    comp_rents, 
+    prop_lat, 
+    prop_lng, 
+    prop_year, 
+    cond_premium, 
+    age_depreciation, 
+    vacancy_rate, 
+    maintenance_rate, 
+    target_yield
 )
-        `);
+result
+`;
+        const out = await pyodide.runPythonAsync(code);
         const obj=JSON.parse(out);
 
-        document.getElementById('propVal').textContent=fmtMoney(obj.estimated_value);
+        document.getElementById('propVal').textContent=fmtMoneyEstimator(obj.estimated_value);
         document.getElementById('propYield').textContent=fmtPct(obj.gross_yield_pct);
         document.getElementById('propYieldNet').textContent=fmtPct(obj.net_yield_pct);
-        document.getElementById('propPsfSale').textContent=obj.median_sale_psf?fmtMoney(obj.median_sale_psf):'—';
-        document.getElementById('propPsfRent').textContent=obj.median_rent_psf?fmtMoney(obj.median_rent_psf):'—';
-        document.getElementById('propRentMo').textContent=fmtMoney(obj.estimated_rent_month);
+        document.getElementById('propPsfSale').textContent=obj.median_sale_psf?fmtMoneyEstimator(obj.median_sale_psf):'—';
+        document.getElementById('propPsfRent').textContent=obj.median_rent_psf?fmtMoneyEstimator(obj.median_rent_psf):'—';
+        document.getElementById('propRentMo').textContent=fmtMoneyEstimator(obj.estimated_rent_month);
 
         const lines=[];
         lines.push(`Location: ${obj.lat&&obj.lng?obj.lat.toFixed(6)+', '+obj.lng.toFixed(6):'not set'}`);
-        lines.push(`Size: ${document.getElementById('propSize').value} ${UNIT()} • Year: ${obj.year_built||'-'}`);
+        lines.push(`Size: ${document.getElementById('propSize').value} ${getUnitValue()} • Year: ${obj.year_built||'-'}`);
         lines.push(`Depreciation x${obj.dep_mult.toFixed(3)} • Condition +${obj.premium_pct.toFixed(1)}%`);
-        lines.push(`Estimated Value: ${fmtMoney(obj.estimated_value)}`);
+        lines.push(`Estimated Value: ${fmtMoneyEstimator(obj.estimated_value)}`);
         lines.push(`Gross Yield: ${fmtPct(obj.gross_yield_pct)} • Net Yield: ${fmtPct(obj.net_yield_pct)}`);
         document.getElementById('propResultsPre').textContent=lines.join('\n');
       }catch(err){
@@ -785,9 +1380,14 @@ estimate_property(
       }
     });
 
-    // ---------- Map 2 (Retail) ----------
+    const UNIT_LAB_INIT = ()=>document.querySelectorAll('.unit-label').forEach(e=>e.textContent=document.getElementById('unit').value);
+    function getUnitValue(){ return document.getElementById('unit').value; }
+    UNIT_LAB_INIT();
+
+    // Map 2 (Retail)
     const markersByType={};
     function initMap2(){
+      if(!document.getElementById('map2')) return;
       map2=new google.maps.Map(document.getElementById('map2'),{center:{lat:22.5726,lng:88.3639},zoom:12,mapTypeControl:false});
       placesService2=new google.maps.places.PlacesService(map2);
       const input=document.getElementById('searchBox2');
@@ -819,7 +1419,6 @@ estimate_property(
       circle2=new google.maps.Circle({map:map2,center:latlng,radius:radius,fillOpacity:.05,strokeColor:'#2563eb'});
     }
     function clearMarkers(){ Object.values(markersByType).forEach(arr=>arr.forEach(m=>m.setMap(null))); Object.keys(markersByType).forEach(k=>markersByType[k]=[]); }
-
     function buildPOIControls(){
       const list=document.getElementById('poiList'); list.innerHTML='';
       const legend=document.getElementById('poiLegend'); legend.innerHTML='<span class="me-2">Legend:</span>';
@@ -827,7 +1426,7 @@ estimate_property(
         const div=document.createElement('div'); div.className='col-12';
         div.innerHTML=`
           <div class="d-flex align-items-center gap-2">
-            <span class="legend-dot" style="background:${t.color}"></span>
+            <span class="legend-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.color}"></span>
             <div class="form-check form-switch me-2">
               <input class="form-check-input" type="checkbox" id="poi_ck_${t.type}" checked>
               <label class="form-check-label" for="poi_ck_${t.type}">${t.emoji} ${t.label}</label>
@@ -838,7 +1437,7 @@ estimate_property(
             </div>
           </div>`;
         list.appendChild(div);
-        const lg=document.createElement('span'); lg.innerHTML=`<span class="legend-dot" style="background:${t.color}"></span>${t.emoji} ${t.label} `;
+        const lg=document.createElement('span'); lg.innerHTML=`<span class="legend-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.color}"></span>${t.emoji} ${t.label} `;
         legend.appendChild(lg);
       });
     }
@@ -848,14 +1447,11 @@ estimate_property(
         icon:{ path:google.maps.SymbolPath.CIRCLE, scale:7, fillColor:t.color, fillOpacity:1, strokeColor:'#333', strokeWeight:0.5 },
         label:{ text:t.emoji, fontSize:'12px' }, title:t.label };
     }
-
     async function nearbySearchAllTypes(center, radius, limit){
       const openNowSel=document.getElementById('openNow').value;
       const openNow=openNowSel==='yes'?true:undefined;
-
       const selected=DEFAULT_POI_TYPES.filter(t=>document.getElementById('poi_ck_'+t.type).checked);
       const resultsByType={}; clearMarkers();
-
       for(const t of selected){
         resultsByType[t.type]=await new Promise(resolve=>{
           let out=[]; const req={location:center, radius:radius, type:t.type, openNow};
@@ -867,7 +1463,6 @@ estimate_property(
             } else resolve(out);
           });
         });
-
         markersByType[t.type]=[];
         (resultsByType[t.type]||[]).forEach(p=>{
           if(!p.geometry||!p.geometry.location) return;
@@ -879,41 +1474,29 @@ estimate_property(
       return resultsByType;
     }
 
-    // Scan button
     document.getElementById('btnScanPOI').addEventListener('click', async ()=>{
-      if(!marker2){ alert('Pick a center on the map (or search).'); return; }
+      if(!marker2){ alert('Pick a center on the map (or paste a project name).'); return; }
       const center=marker2.getPosition();
       const radius=parseInt(document.getElementById('retailRadius').value||'1000');
       const limit=parseInt(document.getElementById('retailLimit').value||'40');
       const minRating=parseFloat(document.getElementById('minRating').value||'0');
       const centerLatLng={lat:center.lat(), lng:center.lng()};
       const results=await nearbySearchAllTypes(centerLatLng, radius, limit);
-
       lastRetailResults = results;
-
-      // counts/ratings summary based on current filter
-      const filtered = {};
-      Object.keys(results).forEach(t=>{ filtered[t]=(results[t]||[]).filter(x=>(x.rating||0)>=minRating); });
-
+      const filtered = {}; Object.keys(results).forEach(t=>{ filtered[t]=(results[t]||[]).filter(x=>(x.rating||0)>=minRating); });
       const counts={}, ratings={};
       Object.keys(filtered).forEach(t=>{
         const arr=filtered[t]||[]; counts[t]=arr.length;
         ratings[t]=arr.length ? (arr.reduce((s,x)=>s+(x.rating||0),0)/arr.length) : 0;
       });
-
-      lastRetailScan={center:centerLatLng, radius, counts, ratings, minRating,
-        openNow:document.getElementById('openNow').value};
-
+      lastRetailScan={center:centerLatLng, radius, counts, ratings, minRating, openNow:document.getElementById('openNow').value};
       document.getElementById('retTypes').textContent=Object.keys(results).length.toString();
       document.getElementById('retRadius').textContent=radius.toString();
       document.getElementById('retMeta').textContent=`Rating>=${minRating||'any'}; Open:${lastRetailScan.openNow}`;
       document.getElementById('retailBreakdown').textContent=
         `Scanned ${Object.keys(results).length} types within ${radius}m.\nCounts: ${JSON.stringify(counts)}\nAvg ratings: ${JSON.stringify(ratings)}\nClick "Compute Score".`;
       document.getElementById('scoreErr').classList.add('d-none');
-
-      // enable Compute Score only after a scan
       document.getElementById('btnScoreRetail').disabled = false;
-
       const sel = document.getElementById('poiCategory');
       sel.innerHTML = `<option value="" selected disabled>— choose a category —</option>`;
       Object.keys(lastRetailResults||{}).forEach(k=>{
@@ -921,29 +1504,19 @@ estimate_property(
         const lbl = meta ? `${meta.emoji} ${meta.label}` : k;
         sel.insertAdjacentHTML('beforeend', `<option value="${k}">${lbl} (${counts[k]||0})</option>`);
       });
-
       renderPOIFlatList();
     });
 
-    // Score button
     document.getElementById('btnScoreRetail').addEventListener('click', async ()=>{
       try{
         if(!pyReady){ alert('Python engine is still loading. Please try again.'); return; }
         if(!lastRetailScan){ alert('Run "Scan Area" first.'); return; }
-
         const weights = {};
         DEFAULT_POI_TYPES.forEach(t => {
           const ckEl = document.getElementById('poi_ck_' + t.type);
           const wtEl = document.getElementById('poi_wt_' + t.type);
-          if (ckEl && wtEl) {
-            const ck = ckEl.checked;
-            const wtVal = parseFloat(wtEl.value || '0');
-            weights[t.type] = ck ? (isFinite(wtVal) ? wtVal : 0) : 0;
-          } else {
-            weights[t.type] = 0;
-          }
+          weights[t.type] = (ckEl && ckEl.checked) ? (isFinite(parseFloat(wtEl.value)) ? parseFloat(wtEl.value) : 0) : 0;
         });
-
         const cts = {}, rts = {};
         Object.keys(weights).forEach(k=>{
           const c = parseFloat((lastRetailScan.counts && lastRetailScan.counts[k]) || 0);
@@ -951,20 +1524,26 @@ estimate_property(
           cts[k] = isFinite(c) ? c : 0;
           rts[k] = isFinite(r) ? r : 0;
         });
-
         const payload = { counts: cts, ratings: rts, weights, radius_m: Number(lastRetailScan.radius) || 1 };
-        pyodide.globals.set('payload_json', JSON.stringify(payload));
+        pyodide.globals.set('score_payload', JSON.stringify(payload));
+        const result = await pyodide.runPythonAsync(`
+import json, math
+def score_retail(counts_by_type, avg_rating_by_type, weights, radius_m):
+    keys=set(list((counts_by_type or {}).keys())+list((weights or {}).keys())+list((avg_rating_by_type or {}).keys()))
+    score=0.0; detail={}
+    for t in keys:
+        c=float(counts_by_type.get(t,0) or 0); w=float(weights.get(t,0) or 0); r=float(avg_rating_by_type.get(t,0) or 0)
+        rb=max(0.0,(r-3.0)*0.5); part=w*(c+rb); detail[t]={"count":c,"weight":w,"avg_rating":r,"component":part}; score+=part
+    norm=score/max(1.0, math.log(max(10.0, float(radius_m or 1))))
+    return {"raw_score":score,"normalized_score":norm,"detail":detail}
 
-        const out = await pyodide.runPythonAsync(`
-import json
-p = json.loads(payload_json)
-score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
+p = json.loads(score_payload)
+result = score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
+json.dumps(result)
         `);
-        const obj = JSON.parse(out);
-
-        document.getElementById('retRaw').textContent = obj.raw_score.toFixed(2);
-        document.getElementById('retNorm').textContent = obj.normalized_score.toFixed(3);
-
+        const obj = JSON.parse(result);
+        document.getElementById('retRaw').textContent = (+obj.raw_score).toFixed(2);
+        document.getElementById('retNorm').textContent = (+obj.normalized_score).toFixed(3);
         const tb = document.getElementById('retTableBody'); tb.innerHTML='';
         Object.entries(obj.detail).forEach(([t,d])=>{
           const meta = DEFAULT_POI_TYPES.find(x=>x.type===t);
@@ -973,12 +1552,11 @@ score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
           tr.innerHTML = `<td>${lbl}</td><td>${(+d.count).toFixed(0)}</td><td>${(+d.avg_rating).toFixed(2)}</td><td>${(+d.weight).toFixed(2)}</td><td>${(+d.component).toFixed(2)}</td>`;
           tb.appendChild(tr);
         });
-
         const lines = [];
         lines.push(`Center: ${lastRetailScan.center.lat.toFixed(6)}, ${lastRetailScan.center.lng.toFixed(6)}`);
         lines.push(`Radius: ${lastRetailScan.radius} m`);
         lines.push(`Filters: rating>=${lastRetailScan.minRating||'any'}; open=${lastRetailScan.openNow}`);
-        lines.push(`Raw Score: ${obj.raw_score.toFixed(2)} • Normalized: ${obj.normalized_score.toFixed(3)}`);
+        lines.push(`Raw Score: ${(+obj.raw_score).toFixed(2)} • Normalized: ${(+obj.normalized_score).toFixed(3)}`);
         document.getElementById('retailBreakdown').textContent = lines.join('\n');
         document.getElementById('scoreErr').classList.add('d-none');
       }catch(err){
@@ -989,11 +1567,63 @@ score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
       }
     });
 
-    // ---- Flat POI List + Export ----
+    // Tab 2 Reset Button
+    document.getElementById('btnResetRetail').addEventListener('click', ()=>{
+      // Clear map marker and POI markers
+      if(marker2) { marker2.setMap(null); marker2 = null; }
+      if(circle2) { circle2.setMap(null); circle2 = null; }
+      clearMarkers(); // Clear all POI markers
+      
+      // Reset map to default center and zoom
+      if(map2) {
+        map2.setCenter({lat:22.5726,lng:88.3639});
+        map2.setZoom(12);
+      }
+      
+      // Clear search box
+      const searchBox2 = document.getElementById('searchBox2');
+      if(searchBox2) searchBox2.value = '';
+      
+      // Reset form controls to defaults
+      document.getElementById('retailRadius').value = 1000;
+      document.getElementById('retailRadiusLbl').textContent = '1000';
+      document.getElementById('retailLimit').value = 50;
+      document.getElementById('retailLimitLbl').textContent = '50';
+      document.getElementById('minRating').value = 0;
+      document.getElementById('openNow').value = 'any';
+      
+      // Reset POI category and filter
+      document.getElementById('poiCategory').value = 'all';
+      document.getElementById('poiFilterText').value = '';
+      
+      // Clear results
+      ['retRaw', 'retNorm', 'retTypes', 'retRadius', 'retMeta'].forEach(id => 
+        document.getElementById(id).textContent = '—'
+      );
+      
+      // Clear breakdown table and text
+      const tbody = document.getElementById('retTableBody');
+      if(tbody) tbody.innerHTML = '';
+      document.getElementById('retailBreakdown').textContent = '—';
+      
+      // Clear location display
+      document.getElementById('retailLatLng').textContent = '—';
+      
+      // Disable compute score button
+      document.getElementById('btnScoreRetail').disabled = true;
+      
+      // Clear stored scan data
+      lastRetailScan = null;
+      
+      // Reset POI controls to defaults (rebuild them)
+      buildPOIControls();
+      
+      // Clear flat POI list
+      renderPOIFlatList();
+    });
+
     const poiSel = document.getElementById('poiCategory');
     const poiFilter = document.getElementById('poiFilterText');
-
-    // Re-render the list when TOP filters change (no keyword now)
     ['change','input'].forEach(ev=>{
       document.getElementById('minRating').addEventListener(ev, renderPOIFlatList);
       document.getElementById('openNow').addEventListener(ev, renderPOIFlatList);
@@ -1001,7 +1631,6 @@ score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
     if(poiSel) poiSel.addEventListener('change', ()=> renderPOIFlatList());
     if(poiFilter) poiFilter.addEventListener('input', ()=> renderPOIFlatList());
 
-    // Build a Google Maps link that reliably drops a pin using directions endpoint
     function normalizeResultItem(type, p, idx){
       let lat=null, lng=null;
       if (p && p.geometry && p.geometry.location) {
@@ -1015,7 +1644,6 @@ score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
         const lngStr = lng.toFixed(7);
         queryLink = `https://www.google.com/maps/dir/?api=1&destination=${latStr},${lngStr}`;
       }
-
       return {
         idx: idx+1,
         name: p.name || '',
@@ -1027,32 +1655,22 @@ score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
         link: queryLink
       };
     }
-
     function currentPOISelection(){
       if(!lastRetailResults) return [];
       const cat = poiSel.value;
       const arr = (cat && lastRetailResults[cat]) ? lastRetailResults[cat] : [];
-
-      // Read current TOP filters
       const minR = parseFloat(document.getElementById('minRating').value || '0');
-      const openSel = document.getElementById('openNow').value; // 'any' | 'yes'
-
-      // Quick filter (bottom)
+      const openSel = document.getElementById('openNow').value;
       const ftxt = (poiFilter.value||'').toLowerCase();
-
-      // Normalize then filter using all criteria
       const rows = arr.map((p,i)=>normalizeResultItem(cat,p,i)).filter(r=>{
-        // allow unrated places when min rating is "Any" (0)
         const passRating = (r.rating === '' ? (minR <= 0) : Number(r.rating) >= minR);
         const passOpen = (openSel === 'any') ? true : r.isOpen === true;
         const hay = `${r.name} ${r.address}`.toLowerCase();
         const passQuick = ftxt ? hay.includes(ftxt) : true;
         return passRating && passOpen && passQuick;
       });
-
       return rows;
     }
-
     function renderPOIFlatList(){
       const body = document.getElementById('poiFlatBody');
       const rows = currentPOISelection();
@@ -1068,46 +1686,234 @@ score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
       </tr>`).join('');
     }
 
-    function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    // ---------- OpenAI Modal ----------
+    const openaiModal = new bootstrap.Modal(document.getElementById('openaiModal'));
+    // Chat System Variables
+    let chatMessages = [];
+    let currentAbortController = null;
 
-    // --- Reliable download helper ---
-    function downloadBlob(filename, blob){
-      const a = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      a.href = url;
-      a.download = filename;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 100);
+    // Chat System Functions
+    function addChatMessage(role, content, isTyping = false) {
+      const chatContainer = document.getElementById('chatContainer');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chat-message ${role}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = `chat-avatar ${role}`;
+      avatar.textContent = role === 'user' ? '👤' : '🏠';
+      
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${role}${isTyping ? ' typing' : ''}`;
+      bubble.textContent = content;
+      
+      if (role === 'user') {
+        messageDiv.appendChild(bubble);
+        messageDiv.appendChild(avatar);
+      } else {
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+      }
+      
+      // Remove welcome message if it exists
+      const welcomeMsg = chatContainer.querySelector('.text-center');
+      if (welcomeMsg) welcomeMsg.remove();
+      
+      chatContainer.appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      
+      return bubble;
     }
 
-    document.getElementById('btnExportCSV').addEventListener('click', ()=>{
-      const rows = currentPOISelection();
-      if(!rows.length){ alert('Nothing to export. Choose a category after scanning or relax filters.'); return; }
-      const header = ["#", "Name", "Address", "Rating", "Ratings Count", "Type", "Google Maps Link"];
-      const csv = [header.join(",")].concat(rows.map(r=>[
-        r.idx, csvCell(r.name), csvCell(r.address), r.rating, r.ratingCount, r.type, csvCell(r.link)
-      ].join(","))).join("\n");
-      const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-      downloadBlob(`poi_${poiSel.value||'all'}_${Date.now()}.csv`, blob);
+    function clearChat() {
+      const chatContainer = document.getElementById('chatContainer');
+      chatContainer.innerHTML = `
+        <div class="text-center text-muted py-4">
+          <div class="mb-3">🏠✨</div>
+          <div>Welcome to Atlas! I'm your AI real estate assistant.</div>
+          <div class="small mt-2">Ask me about property analysis, market insights, or investment advice.</div>
+        </div>
+      `;
+      chatMessages = [];
+    }
+
+    function toggleChatUI(isGenerating) {
+      const sendBtn = document.getElementById('btnRunOpenAI');
+      const stopBtn = document.getElementById('btnStopChat');
+      const promptInput = document.getElementById('openaiPrompt');
+      
+      if (isGenerating) {
+        sendBtn.querySelector('.send-text').classList.add('d-none');
+        sendBtn.querySelector('.loading-text').classList.remove('d-none');
+        sendBtn.disabled = true;
+        stopBtn.classList.remove('d-none');
+        promptInput.disabled = true;
+      } else {
+        sendBtn.querySelector('.send-text').classList.remove('d-none');
+        sendBtn.querySelector('.loading-text').classList.add('d-none');
+        sendBtn.disabled = false;
+        stopBtn.classList.add('d-none');
+        promptInput.disabled = false;
+      }
+    }
+
+    async function streamChatResponse(messages, model) {
+      const key = OPENAI_KEY;
+      if (!key) throw new Error("OpenAI key not configured");
+      
+      currentAbortController = new AbortController();
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.2,
+          stream: true
+        }),
+        signal: currentAbortController.signal
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`OpenAI error ${response.status}: ${text.slice(0, 180)}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantBubble = addChatMessage('assistant', 'Thinking...', true);
+      let fullResponse = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  assistantBubble.className = assistantBubble.className.replace(' typing', '');
+                  assistantBubble.textContent = fullResponse;
+                  document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
+                }
+              } catch (e) {
+                // Ignore parsing errors for incomplete chunks
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      return fullResponse;
+    }
+
+    // Event Handlers
+    document.getElementById('btnOpenAIModal').addEventListener('click', () => openaiModal.show());
+    
+    document.getElementById('btnResetChat').addEventListener('click', () => {
+      clearChat();
     });
-    function csvCell(val){
-      const s = (val != null ? val : '').toString().replace(/"/g,'""');
-      return `"${s}"`;
-    }
 
-    document.getElementById('btnExportXLSX').addEventListener('click', ()=>{
-      const rows = currentPOISelection();
-      if(!rows.length){ alert('Nothing to export. Choose a category after scanning or relax filters.'); return; }
-      const data = [["#", "Name", "Address", "Rating", "Ratings Count", "Type", "Google Maps Link"]]
-        .concat(rows.map(r=>[r.idx, r.name, r.address, r.rating, r.ratingCount, r.type, r.link]));
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "POI");
-      const ab = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-      const blob = new Blob([ab], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-      downloadBlob(`poi_${poiSel.value||'all'}_${Date.now()}.xlsx`, blob);
+    document.getElementById('btnStopChat').addEventListener('click', () => {
+      if (currentAbortController) {
+        currentAbortController.abort();
+        currentAbortController = null;
+      }
+      toggleChatUI(false);
+    });
+
+    document.getElementById('btnCtxProperty').addEventListener('click', () => {
+      const loc = document.getElementById('propLatLng').textContent || '—';
+      const size = document.getElementById('propSize').value || '—';
+      const unit = document.getElementById('unit').value;
+      const val = document.getElementById('propVal').textContent || '—';
+      const gy = document.getElementById('propYield').textContent || '—';
+      const ny = document.getElementById('propYieldNet').textContent || '—';
+      const ctx = `PROPERTY CONTEXT:
+- Location: ${loc}
+- Size: ${size} ${unit}
+- Estimated Value: ${val}
+- Gross Yield: ${gy}
+- Net Yield: ${ny}
+
+Please analyze this property's investment attractiveness, risk factors, and negotiation pointers.`;
+      const ta = document.getElementById('openaiPrompt');
+      ta.value = (ta.value ? ta.value + "\n\n" : "") + ctx;
+      ta.focus();
+    });
+
+    document.getElementById('btnCtxRetail').addEventListener('click', () => {
+      const c = lastRetailScan;
+      const ctx = c ? `RETAIL CONTEXT:
+- Center: ${c.center.lat.toFixed(6)}, ${c.center.lng.toFixed(6)}
+- Radius: ${c.radius} m
+- Filters: rating>=${c.minRating||'any'}; open=${c.openNow}
+- Counts by type: ${JSON.stringify(c.counts)}
+- Average ratings by type: ${JSON.stringify(c.ratings)}
+
+Please summarize trade area strengths/weaknesses and suggest 3 retail categories likely to perform well.` : `RETAIL CONTEXT: (no scan yet)`;
+      const ta = document.getElementById('openaiPrompt');
+      ta.value = (ta.value ? ta.value + "\n\n" : "") + ctx;
+      ta.focus();
+    });
+
+    document.getElementById('btnRunOpenAI').addEventListener('click', async () => {
+      const prompt = document.getElementById('openaiPrompt').value.trim();
+      if (!prompt) {
+        alert('Please enter a message first.');
+        return;
+      }
+
+      const model = 'gpt-4.1'; // Always use GPT-4.1 Advanced
+      
+      // Add user message to chat
+      addChatMessage('user', prompt);
+      chatMessages.push({ role: 'user', content: prompt });
+      
+      // Clear input
+      document.getElementById('openaiPrompt').value = '';
+      
+      toggleChatUI(true);
+
+      try {
+        const response = await streamChatResponse([
+          { role: 'system', content: 'You are Atlas, an expert real estate AI assistant. Provide helpful, accurate advice about property investment, market analysis, and real estate trends. Be concise but thorough in your responses.' },
+          ...chatMessages
+        ], model);
+        
+        chatMessages.push({ role: 'assistant', content: response });
+      } catch (err) {
+        console.error('Chat error:', err);
+        if (err.name !== 'AbortError') {
+          addChatMessage('assistant', `❌ Error: ${err.message}\n\n(If CORS blocks browser calls, you may need a proxy API.)`);
+        }
+      } finally {
+        toggleChatUI(false);
+        currentAbortController = null;
+      }
+    });
+
+    // Allow Enter to send message (Shift+Enter for new line)
+    document.getElementById('openaiPrompt').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('btnRunOpenAI').click();
+      }
     });
 
     // Tab map reflow
@@ -1118,83 +1924,6 @@ score_retail(p["counts"], p["ratings"], p["weights"], p["radius_m"])
           if(e.target.id==='tab-retail' && map2){ const c=map2.getCenter(); google.maps.event.trigger(map2,'resize'); map2.setCenter(c); }
         }
       });
-    });
-
-    // Init unit labels
-    updateUnitLabels();
-
-    // ---------- OpenAI Modal ----------
-    const openaiModal = new bootstrap.Modal(document.getElementById('openaiModal'));
-    document.getElementById('btnOpenAIModal').addEventListener('click', ()=> openaiModal.show());
-
-    document.getElementById('btnCtxProperty').addEventListener('click', ()=>{
-      const ctx = buildPropertyContext();
-      const ta = document.getElementById('openaiPrompt');
-      ta.value = (ta.value ? ta.value + "\n\n" : "") + ctx;
-      ta.focus();
-    });
-    document.getElementById('btnCtxRetail').addEventListener('click', ()=>{
-      const ctx = buildRetailContext();
-      const ta = document.getElementById('openaiPrompt');
-      ta.value = (ta.value ? ta.value + "\n\n" : "") + ctx;
-      ta.focus();
-    });
-
-    function buildPropertyContext(){
-      const loc = document.getElementById('propLatLng').textContent || '—';
-      const size = document.getElementById('propSize').value || '—';
-      const unit = UNIT();
-      const val = document.getElementById('propVal').textContent || '—';
-      const gy = document.getElementById('propYield').textContent || '—';
-      const ny = document.getElementById('propYieldNet').textContent || '—';
-      return `PROPERTY CONTEXT:
-- LatLng: ${loc}
-- Size: ${size} ${unit}
-- Estimated Value: ${val}
-- Gross Yield: ${gy}
-- Net Yield: ${ny}
-Please analyze investment attractiveness, risk factors, and negotiation pointers.`;
-    }
-
-    function buildRetailContext(){
-      if(!lastRetailScan) return `RETAIL CONTEXT: (no scan yet)`;
-      const c = lastRetailScan;
-      return `RETAIL CONTEXT:
-- Center: ${c.center.lat.toFixed(6)}, ${c.center.lng.toFixed(6)}
-- Radius: ${c.radius} m
-- Filters: rating>=${c.minRating||'any'}; open=${c.openNow}
-- Counts by type: ${JSON.stringify(c.counts)}
-- Average ratings by type: ${JSON.stringify(c.ratings)}
-Please summarize trade area strengths/weaknesses for a general retail concept and suggest 3 categories that would likely perform well.`;
-    }
-
-    document.getElementById('btnRunOpenAI').addEventListener('click', async ()=>{
-      const prompt = document.getElementById('openaiPrompt').value.trim();
-      if(!prompt){ alert('Write a prompt first.'); return; }
-      const model = document.getElementById('openaiModel').value;
-      const key = OPENAI_KEY;
-      if(!key){ alert('OpenAI API key not configured. Please ensure encrypted key is properly set.'); return; }
-
-      const outEl = document.getElementById('openaiOutput');
-      outEl.textContent = 'Generating...';
-
-      try{
-        const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${key}` },
-          body: JSON.stringify({ model, messages: [{role:'user', content: prompt}], temperature: 0.2 })
-        });
-        if(!resp.ok){
-          const t = await resp.text();
-          throw new Error(`OpenAI error ${resp.status}: ${t}`);
-        }
-        const data = await resp.json();
-        const msg = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '(no content)';
-        outEl.textContent = msg;
-      }catch(err){
-        console.error(err);
-        outEl.textContent = `Failed: ${err.message}\n\n(If CORS error, use a simple proxy endpoint.)`;
-      }
     });
   </script>
 </body>
