@@ -1686,6 +1686,48 @@ json.dumps(result)
       </tr>`).join('');
     }
 
+    // Export functionality for POI list in second tab
+    document.getElementById('btnExportCSV').addEventListener('click', ()=>{
+      const rows = currentPOISelection();
+      if(!rows.length) {
+        alert('No POI data to export. Please scan an area first and select a category.');
+        return;
+      }
+      const header = ["#","Name","Address","Rating","Ratings Count","Type","Google Maps"];
+      const csvRows = rows.map(r=>[
+        r.idx, r.name, r.address, 
+        r.rating !== '' ? Number(r.rating).toFixed(1) : '',
+        r.ratingCount || '',
+        r.type || '',
+        r.link || ''
+      ]);
+      const csv = [header.join(",")].concat(csvRows.map(r=>r.map(csvCell).join(","))).join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+      downloadBlob(`poi_export_${Date.now()}.csv`, blob);
+    });
+
+    document.getElementById('btnExportXLSX').addEventListener('click', ()=>{
+      const rows = currentPOISelection();
+      if(!rows.length) {
+        alert('No POI data to export. Please scan an area first and select a category.');
+        return;
+      }
+      const data = [["#","Name","Address","Rating","Ratings Count","Type","Google Maps"]]
+        .concat(rows.map(r=>[
+          r.idx, r.name, r.address,
+          r.rating !== '' ? Number(r.rating).toFixed(1) : '',
+          r.ratingCount || '',
+          r.type || '',
+          r.link || ''
+        ]));
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "POI_Data");
+      const ab = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+      const blob = new Blob([ab], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      downloadBlob(`poi_export_${Date.now()}.xlsx`, blob);
+    });
+
     // ---------- OpenAI Modal ----------
     const openaiModal = new bootstrap.Modal(document.getElementById('openaiModal'));
     // Chat System Variables
