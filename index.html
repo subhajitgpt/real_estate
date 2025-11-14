@@ -389,9 +389,9 @@
           <div class="col-lg-5">
             <div class="card card-soft p-3">
               <div class="d-flex justify-content-between align-items-center">
-                <h6 class="mb-1">POI Types &amp; Weights</h6>
+                <h6 class="mb-1">POI Types &amp; Importance</h6>
               </div>
-              <div class="text-muted small mb-1">Toggle types &amp; adjust weights (importance).</div>
+              <div class="text-muted small mb-1">Toggle types &amp; set importance levels for nearby facilities.</div>
 
               <div id="poiLegend" class="small mb-2"></div>
               <div id="poiList" class="row g-2 mt-2"></div>
@@ -421,7 +421,7 @@
           <div class="table-responsive mt-3">
             <table class="table table-sm">
               <thead class="table-light">
-                <tr><th>Type</th><th>Count</th><th>Avg Rating</th><th>Weight</th><th>Component</th></tr>
+                <tr><th>Type</th><th>Count</th><th>Avg Rating</th><th>Importance</th></tr>
               </thead>
               <tbody id="retTableBody"></tbody>
             </table>
@@ -1247,10 +1247,7 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
       if (propertyType === 'commercial') {
         typeLabel.textContent = 'Space Type';
         typeSelect.innerHTML = `
-          <option value="Small Office">Small Office (500-1500 sqft)</option>
-          <option value="Medium Office" selected>Medium Office (1500-3000 sqft)</option>
-          <option value="Large Office">Large Office (3000+ sqft)</option>
-          <option value="Retail Space">Retail Space</option>
+          <option value="Commercial Space" selected>Commercial Space</option>
         `;
       } else {
         typeLabel.textContent = 'Apt Type';
@@ -1805,7 +1802,11 @@ json.dumps(result)
           const meta = DEFAULT_POI_TYPES.find(x=>x.type===t);
           const lbl = meta ? `${meta.emoji} ${meta.label}` : t;
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${lbl}</td><td>${(+d.count).toFixed(0)}</td><td>${(+d.avg_rating).toFixed(2)}</td><td>${(+d.weight).toFixed(2)}</td><td>${(+d.component).toFixed(2)}</td>`;
+          const poiMeta = DEFAULT_POI_TYPES.find(x=>x.type===t);
+          const priority = poiMeta ? poiMeta.priority : 'medium';
+          const importanceText = priority === 'high' ? 'High' : priority === 'medium' ? 'Medium' : 'Low';
+          const importanceIcon = priority === 'high' ? '🔴' : priority === 'medium' ? '🟡' : '🟢';
+          tr.innerHTML = `<td>${lbl}</td><td>${(+d.count).toFixed(0)}</td><td>${(+d.avg_rating).toFixed(2)}</td><td>${importanceIcon} ${importanceText}</td>`;
           tb.appendChild(tr);
         });
         // Calculate score breakdown by priority
@@ -1837,7 +1838,6 @@ json.dumps(result)
         const ratingText = totalScore >= 15 ? 'Excellent' : totalScore >= 10 ? 'Very Good' : totalScore >= 5 ? 'Good' : 'Average';
         lines.push(`🏢 LOCATION CONVENIENCE SUMMARY:`);
         lines.push(``);
-        lines.push(`📍 Area Assessment: ${ratingText} location for daily needs`);
         lines.push(`🔴 High Importance Facilities: ${Math.round(priorityTotals.high)} options nearby`);
         lines.push(`🟡 Medium Importance Facilities: ${Math.round(priorityTotals.medium)} options nearby`);
         lines.push(`🟢 Low Importance Facilities: ${Math.round(priorityTotals.low)} options nearby`);
