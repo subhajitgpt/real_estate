@@ -45,26 +45,6 @@
       box-shadow:0 6px 16px rgba(220,38,38,0.4);
     }
     
-    /* Priority Dropdown Color Coding */
-    .priority-high {
-      background-color: #fef2f2 !important;
-      color: #dc2626 !important;
-      border-color: #fca5a5 !important;
-      font-weight: 600;
-    }
-    .priority-medium {
-      background-color: #fffbeb !important;
-      color: #d97706 !important;
-      border-color: #fcd34d !important;
-      font-weight: 600;
-    }
-    .priority-low {
-      background-color: #f0fdf4 !important;
-      color: #16a34a !important;
-      border-color: #bbf7d0 !important;
-      font-weight: 600;
-    }
-    
     /* Chat Interface Styles */
     .chat-message {
       margin-bottom: 1rem;
@@ -134,88 +114,6 @@
     #chatContainer::-webkit-scrollbar-thumb:hover {
       background: #a8a8a8;
     }
-    
-    /* Priority Dropdown Styles */
-    .priority-select {
-      min-width: 160px;
-      width: 160px;
-      font-size: 12px;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      background: white;
-      transition: all 0.2s ease;
-      font-weight: 500;
-    }
-    
-    .priority-select:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-    }
-    
-    .priority-select option {
-      padding: 8px 12px;
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    
-    /* POI Control Row Styles */
-    .poi-control-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-      margin-bottom: 6px;
-      transition: all 0.3s ease;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    }
-    
-    .poi-control-row:hover {
-      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-      border-color: #cbd5e1;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    }
-    
-    .poi-legend-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      border: 2px solid rgba(255, 255, 255, 0.9);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      margin-right: 10px;
-    }
-    
-    .poi-left-section {
-      display: flex;
-      align-items: center;
-      flex: 1;
-      min-width: 0;
-    }
-    
-    .poi-switch {
-      display: flex;
-      align-items: center;
-    }
-    
-    .poi-switch .form-check-input {
-      margin-right: 8px;
-      transform: scale(1.1);
-    }
-    
-    .poi-switch .form-check-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #374151;
-      margin: 0;
-      white-space: nowrap;
-    }
   </style>
 </head>
 <body>
@@ -260,28 +158,21 @@
                   </select>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">Property Type</label>
-                  <div class="row g-2">
-                    <div class="col-6">
-                      <input type="radio" id="propTypeResidential" name="propertyType" value="residential" class="property-type-radio" checked>
-                      <label for="propTypeResidential" class="property-type-label">
-                        🏠 Residential
-                      </label>
-                    </div>
-                    <div class="col-6">
-                      <input type="radio" id="propTypeCommercial" name="propertyType" value="commercial" class="property-type-radio">
-                      <label for="propTypeCommercial" class="property-type-label">
-                        🏢 Commercial
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12">
                   <label class="form-label">City</label>
                   <input id="pfCity" class="form-control" placeholder="e.g., Kolkata, Dubai">
                 </div>
                 <div class="col-6">
-                  <label class="form-label" id="pfTypeLabel">Apt Type</label>
+                  <label class="form-label">Currency</label>
+                  <select id="pfCurrency" class="form-select">
+                    <option value="INR" selected>₹ INR</option>
+                    <option value="AED">AED</option>
+                    <option value="USD">$ USD</option>
+                    <option value="SGD">SGD</option>
+                    <option value="GBP">£ GBP</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Apt Type</label>
                   <select id="pfType" class="form-select">
                     <option value="1 BHK">1 BHK</option>
                     <option value="2 BHK" selected>2 BHK</option>
@@ -289,17 +180,18 @@
                   </select>
                 </div>
                 <div class="col-6">
+                  <label class="form-label">Budget</label>
+                  <input id="pfBudget" type="number" class="form-control" placeholder="e.g., 6500000">
+                  <div class="form-help">Numeric (in selected currency)</div>
+                </div>
+                <div class="col-6">
                   <label class="form-label">Locality</label>
                   <input id="pfLocality" class="form-control" placeholder="e.g., New Town, Marina, Downtown">
                 </div>
               </div>
-              <div class="mt-3 d-grid">
+              <div class="mt-3 d-grid gap-2">
                 <button id="btnFindProperties" class="btn btn-primary btn-pill" type="button">Find Projects</button>
-              </div>
-              <div class="alert alert-info mt-3 mb-0 text-center" style="font-size: 13px; padding: 12px; border-radius: 8px; background: linear-gradient(135deg, #e3f2fd, #f8f9fa); border: 1px solid #bee5eb;">
-                <i class="fas fa-info-circle me-2 text-info"></i>
-                <strong>Note:</strong> This is an analytical and location intelligence tool.<br>
-                <span class="text-muted">For details on pricing and logistics, please see country-specific advertisement sites or property websites.</span>
+                <button id="btnClearPF" class="btn btn-outline-secondary btn-pill" type="button">Reset</button>
               </div>
               <div id="pfError" class="text-danger small mt-2 d-none"></div>
             </div>
@@ -323,10 +215,10 @@
                 <table class="table table-sm table-hover">
                   <thead class="table-light">
                     <tr>
-                      <th>#</th><th>Project (Exact Map Name)</th><th>Area</th><th>Type</th><th>Size</th><th>Rating</th>
+                      <th>#</th><th>Project (Exact Map Name)</th><th>Area</th><th>Type</th><th>Size</th><th>Price</th><th>Band</th><th>Rating</th>
                     </tr>
                   </thead>
-                  <tbody id="pfTableBody"><tr><td colspan="6" class="text-muted">Run a search to populate results.</td></tr></tbody>
+                  <tbody id="pfTableBody"><tr><td colspan="8" class="text-muted">Run a search to populate results.</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -452,10 +344,10 @@
             <table class="table table-sm table-hover" id="poiFlatTable">
               <thead class="table-light">
                 <tr>
-                  <th>#</th><th>Name</th><th>Address</th><th>Rating</th><th>Ratings Count</th><th>Type</th><th>Importance</th><th>Google Maps</th>
+                  <th>#</th><th>Name</th><th>Address</th><th>Rating</th><th>Ratings Count</th><th>Type</th><th>Google Maps</th>
                 </tr>
               </thead>
-              <tbody id="poiFlatBody"><tr><td colspan="8" class="text-muted">Scan an area, choose a category, and the list will appear here.</td></tr></tbody>
+              <tbody id="poiFlatBody"><tr><td colspan="7" class="text-muted">Scan an area, choose a category, and the list will appear here.</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -742,126 +634,42 @@ Schema:\n\
   ]\n\
 }" },
         { role: "user", content:
-`Find ONLY ${payload.propertyType === 'commercial' ? 'COMMERCIAL office buildings, business centers, retail spaces, and commercial complexes' : 'RESIDENTIAL apartment complexes, housing societies, and residential towers'} for ${payload.type} apartments in ${payload.city}, ${payload.country}.
-Property Category: ${payload.propertyType.toUpperCase()}
-Country Context: ${payload.country === 'India' ? 'Indian residential market with apartment complexes and housing societies' : 'UAE residential market with modern apartment towers and residential communities'}
-Preferred locality="${payload.locality || "(none)"}".
-IMPORTANT: Return ONLY ${payload.propertyType === 'commercial' ? 'commercial/office properties - NO residential buildings' : `${payload.type} residential apartments in apartment complexes - NO independent houses, villas, or commercial buildings`}.
-Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'commercial properties with office/retail spaces' : `${payload.type} apartment projects with proper bedroom configurations`} with appropriate price ranges for ${payload.country}. Size in sqft.` }
+`Find housing projects (not individual units) for ${payload.type} in ${payload.city}, ${payload.country}.
+Currency=${payload.currency}; Budget=${payload.budget}; Preferred locality="${payload.locality || "(none)"}".
+Return 8–14 diverse, realistic projects. Size in sqft. Bands can vary ±20% around budget if needed for variety.` }
       ];
     }
 
     // Heuristic fallback (16 candidates)
-    function localHeuristicFinder({country, city, type, locality, propertyType}){
-      // Separate area pools for residential vs commercial properties
-      // Expanded area pools to ensure variety across BHK types
-      const residentialAreasByCity = {
-        "kolkata":["New Town","Salt Lake","Rajarhat","Tollygunge","Behala","Dum Dum","Ballygunge","Jadavpur","Ultadanga","Kasba","Baguiati","Garia","Narendrapur","EM Bypass","Lake Town","Barasat","Madhyamgram","Howrah","Serampore","Barrackpore","Bidhannagar","Action Area","Shapoorji","Webel"],
-        "dubai":["Marina","JLT","JVC","Barsha","Silicon Oasis","Mirdif","Discovery Gardens","Greens","IMPZ","Sports City","Arjan","Al Furjan","Jumeirah","Bur Dubai","Karama","Satwa","Al Qusais","Muhaisnah","Al Warqa","Al Mizhar","Nad Al Sheba","Al Khawaneej","Dubailand","Motor City"],
-        "singapore":["Tampines","Jurong East","Punggol","Serangoon","Bukit Timah","Toa Payoh","Kallang","Clementi","Queenstown","Woodlands","Sengkang","Yishun","Bukit Panjang","Hougang","Pasir Ris","Bedok","Ang Mo Kio","Bishan","Jurong West","Choa Chu Kang","Sembawang","Bukit Batok"]
+    function localHeuristicFinder({country, city, currency, type, budget, locality}){
+      const areasByCity = {
+        "kolkata":["New Town","Salt Lake","Rajarhat","Tollygunge","Behala","Dum Dum","Ballygunge","Jadavpur","Ultadanga","Kasba","Baguiati","Garia","Narendrapur","EM Bypass","Lake Town","Barasat","Madhyamgram","Howrah","Park Street","Esplanade"],
+        "dubai":["Marina","JLT","Business Bay","Downtown","JVC","Barsha","Silicon Oasis","Mirdif","Discovery Gardens","Deira","Bur Dubai","Greens","Tecom","IMPZ","Sports City","Arjan"],
+        "singapore":["Tampines","Jurong East","Punggol","Serangoon","Bukit Timah","Toa Payoh","Kallang","Clementi","Queenstown","Woodlands","Sengkang","Yishun","Bukit Panjang","Hougang","Geylang","Novena"]
       };
-      
-      const commercialAreasByCity = {
-        "kolkata":["Park Street","Esplanade","BBD Bagh","Sector V","New Town","Rajarhat","EM Bypass","Camac Street","AJC Bose Road","Kasba","Jessore Road","VIP Road","Salt Lake","Bidhannagar","Action Area","Unitech","DLF","Ecospace"],
-        "dubai":["Business Bay","DIFC","Downtown","Deira","Bur Dubai","Tecom","JLT","Media City","Internet City","Knowledge Village","Academic City","Dubai South","Sheikh Zayed Road","Trade Center","Karama","Al Garhoud","Festival City","Healthcare City"],
-        "singapore":["CBD","Marina Bay","Orchard","Raffles Place","Tanjong Pagar","Clarke Quay","City Hall","Bugis","Novena","Jurong East","Tampines","Woodlands","Paya Lebar","One North","Changi Business Park","Seletar"]
-      };
-      
-      const areasByCity = propertyType === 'commercial' ? commercialAreasByCity : residentialAreasByCity;
-      
-      const residentialSuffixes = ["Heights","Residency","Enclave","Greens","Lakeview","Garden","Vista","Court","Paradise","Orchid","Crest","Grande","Harbour","Meadows","Valley","Arcade"];
-      const commercialSuffixes = ["Plaza","Tower","Complex","Center","Hub","Business Park","Corporate Center","Office Park","Trade Center","Commercial Complex","IT Park","Tech Park","Business Hub","Corporate Plaza","Office Complex","Commercial Tower"];
-      
-      const suffixes = propertyType === 'commercial' ? commercialSuffixes : residentialSuffixes;
+      const suffixes = ["Heights","Residency","Enclave","Greens","Lakeview","Garden","Vista","Court","Paradise","Orchid","Crest","Grande","Harbour","Meadows","Valley","Arcade"];
       const key = (city||"").toLowerCase().trim();
       const pool = areasByCity[key] || ["Central","East","West","North","South","Midtown","Uptown","Riverside","Park","Harbour","Hill","Valley","Lake","Heights","Crescent","Arcade"];
       const picks = [];
-      // Market-based pricing by city and type
-      const marketPrices = {
-        "kolkata": {
-          // Residential
-          "1 BHK": [3500000, 7500000], "2 BHK": [5500000, 12000000], "3 BHK": [8500000, 18000000],
-          // Commercial  
-          "Small Office": [2500000, 6000000], "Medium Office": [6000000, 15000000], "Large Office": [15000000, 40000000], "Retail Space": [4000000, 12000000]
-        },
-        "dubai": {
-          // Residential
-          "1 BHK": [800000, 1600000], "2 BHK": [1200000, 2400000], "3 BHK": [1800000, 3600000],
-          // Commercial
-          "Small Office": [600000, 1400000], "Medium Office": [1400000, 3500000], "Large Office": [3500000, 8000000], "Retail Space": [1000000, 2800000]
-        },
-        "singapore": {
-          // Residential  
-          "1 BHK": [850000, 1700000], "2 BHK": [1300000, 2600000], "3 BHK": [1950000, 3900000],
-          // Commercial
-          "Small Office": [700000, 1600000], "Medium Office": [1600000, 4000000], "Large Office": [4000000, 10000000], "Retail Space": [1200000, 3200000]
-        }
-      };
-      const currency = key === "kolkata" ? "INR" : key === "dubai" ? "AED" : "SGD";
-      const priceRange = marketPrices[key] || marketPrices["kolkata"];
-      const typeRange = priceRange[type] || priceRange["2 BHK"];
-      const [minPrice, maxPrice] = typeRange;
-      
+      const base = Number(budget)||5000000;
       for(let i=0;i<Math.min(16,pool.length);i++){
-        const variation = 0.8 + (i * 0.025); // Price variation across areas
-        const bandLow = Math.round(minPrice * variation);
-        const bandHigh = Math.round(maxPrice * variation * 0.85);
-        
-        // Create unique property names based on BHK type and property type
-        let pseudo;
-        if (propertyType === 'commercial') {
-          pseudo = pool[i] + " " + suffixes[i % suffixes.length];
-        } else {
-          // For residential, add BHK-specific suffixes to ensure uniqueness
-          const bhkSuffixes = {
-            "1 BHK": ["Nest", "Studio", "Compact", "Urban", "Smart", "Elite", "Prime", "Metro", "City", "Central", "Modern", "Cozy", "Select", "Pearl", "Gem", "Crown"],
-            "2 BHK": ["Heights", "Residency", "Enclave", "Greens", "Garden", "Vista", "Court", "Paradise", "Orchid", "Grande", "Harbour", "Valley", "Arcade", "Plaza", "Tower", "Square"],
-            "3 BHK": ["Luxury", "Premium", "Royal", "Grand", "Imperial", "Majestic", "Platinum", "Diamond", "Sapphire", "Golden", "Signature", "Executive", "Prestige", "Elite", "Supreme", "Pinnacle"]
-          };
-          const typeSuffixes = bhkSuffixes[type] || bhkSuffixes["2 BHK"];
-          pseudo = pool[i] + " " + typeSuffixes[i % typeSuffixes.length];
-        }
-        
-        // Different size calculations for residential vs commercial
-        let sizeCalc;
-        if (propertyType === 'commercial') {
-          sizeCalc = type.includes('Small') ? `${800 + 50*i} sqft` : 
-                     type.includes('Medium') ? `${2000 + 100*i} sqft` : 
-                     type.includes('Large') ? `${4000 + 200*i} sqft` : 
-                     `${1200 + 75*i} sqft`;
-        } else {
-          // BHK-specific sizes to ensure differentiation
-          const baseSizes = {
-            "1 BHK": 650 + (i * 25), // 650-1025 sqft range
-            "2 BHK": 1050 + (i * 35), // 1050-1575 sqft range  
-            "3 BHK": 1450 + (i * 45)  // 1450-2125 sqft range
-          };
-          sizeCalc = `${baseSizes[type] || (900 + 40*i)} sqft`;
-        }
-        
-        // Different descriptions for residential vs commercial  
-        const prosDesc = propertyType === 'commercial' ? 
-          ["Prime business location", "Good corporate connectivity"] : 
-          ["Good connectivity", "Reasonable social infra"];
-        
-        const consDesc = propertyType === 'commercial' ? 
-          ["Verify parking availability", "Check lease terms"] : 
-          ["Check maintenance", "Stock varies"];
-        
+        const bandLow = Math.round(base*(0.72+0.03*i));
+        const bandHigh= Math.round(bandLow*1.14);
+        const pseudo = pool[i] + " " + suffixes[i % suffixes.length];
         picks.push({
           project_name: pseudo,
           area: pool[i],
           apartment_type: type,
-          size: sizeCalc,
+          size: `${900 + 40*i} sqft`,
           price: Math.round((bandLow+bandHigh)/2),
           price_band: `${fmtMoney(bandLow,currency)}–${fmtMoney(bandHigh,currency)}`,
-          pros: prosDesc,
-          cons: consDesc,
+          pros: ["Good connectivity","Reasonable social infra"],
+          cons: ["Check maintenance","Stock varies"],
           notes: ""
         });
       }
       return {
-        summary: `• ${city}: ${type} ${propertyType === 'commercial' ? 'commercial properties' : 'apartment complexes'} across ${picks.length} different areas.\n• Each project offers distinct ${propertyType === 'residential' ? type + ' configurations' : 'office layouts'} with varied amenities.\n• Price ranges are market-based; verify ${propertyType === 'commercial' ? 'lease terms & facilities' : 'project status & possession dates'}.\n• Prioritize ${propertyType === 'commercial' ? 'connectivity, parking & business infrastructure' : 'metro connectivity, schools & healthcare nearby'}.`,
+        summary: `• ${city}: ${type} projects across ${picks.length} areas.\n• Bands are indicative; verify tower age & maintenance.\n• Prioritize metro, hospitals, schools.`,
         picks
       };
     }
@@ -933,13 +741,24 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
 
     // --- Strict filter with parameters (DEFAULT RADIUS NOW 2000 m)
     function applyFinderFilters(payload, picks, localityPoint, opts={}){
+      const price = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+      const BUDGET = Number(payload.budget || 0);
       const TYPE = (payload.type || '').trim();
+      const PRICE_SLACK_PCT = opts.priceSlackPct ?? 15;   // ±15%
       const LOC_RADIUS_M     = opts.locRadiusM    ?? 2000; // ***** 2 km default *****
       const requireGeometry  = !!opts.requireGeometry;
       const hasLocality = !!localityPoint;
 
+      const minPrice = BUDGET * (1 - PRICE_SLACK_PCT/100);
+      const maxPrice = BUDGET * (1 + PRICE_SLACK_PCT/100);
+
       return (picks || []).filter(p=>{
         if (TYPE && p.apartment_type && p.apartment_type !== TYPE) return false;
+
+        const pr = price(p.price);
+        if (BUDGET > 0 && pr !== null){
+          if (pr < minPrice || pr > maxPrice) return false;
+        }
 
         if (hasLocality){
           if (typeof p.lat === 'number' && typeof p.lng === 'number'){
@@ -953,25 +772,30 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
       });
     }
 
-    // --- Relaxation ladder: use radius steps to get adequate results
+    // --- Relaxation ladder: keep radius locked at 2000 m; only relax price if needed
     async function relaxAndFilter(payload, picks, localityPoint){
       const TARGET = 10;
-      const radiusSteps = localityPoint ? [2000, 3000, 5000] : [35000]; // Progressive radius expansion
+      const radiusSteps = localityPoint ? [2000] : [35000]; // ***** lock to 2 km when locality specified *****
+      const priceSteps  = [15, 20, 25, 30, 35];
 
       for (const r of radiusSteps){
-        const out = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:r, requireGeometry:true});
-        if (out.length >= TARGET) return {out, r, strictGeo:true};
+        for (const p of priceSteps){
+          const out = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:r, priceSlackPct:p, requireGeometry:true});
+          if (out.length >= TARGET) return {out, r, p, strictGeo:true};
+        }
       }
       for (const r of radiusSteps){
-        const out = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:r, requireGeometry:false});
-        if (out.length >= TARGET) return {out, r, strictGeo:false};
+        for (const p of priceSteps){
+          const out = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:r, priceSlackPct:p, requireGeometry:false});
+          if (out.length >= TARGET) return {out, r, p, strictGeo:false};
+        }
       }
-      const fallback = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:radiusSteps.at(-1), requireGeometry:false});
-      return {out: fallback, r: radiusSteps.at(-1), strictGeo:false};
+      const fallback = applyFinderFilters(payload, picks, localityPoint, {locRadiusM:radiusSteps.at(-1), priceSlackPct:priceSteps.at(-1), requireGeometry:false});
+      return {out: fallback, r: radiusSteps.at(-1), p: priceSteps.at(-1), strictGeo:false};
     }
 
-    // --- NEW: Harvest nearby properties within 5 km if not enough results
-    async function harvestNearbyProjects({ localityPoint, city, type, needCount, propertyType }){
+    // --- NEW: Harvest nearby residential projects within 5 km if not enough results
+    async function harvestNearbyProjects({ localityPoint, city, currency, type, budget, needCount, priceSlackPct=25 }){
       if(!window.google || !google.maps?.places || !localityPoint || !needCount) return [];
       const service = new google.maps.places.PlacesService(document.createElement('div'));
       const center = new google.maps.LatLng(localityPoint.lat, localityPoint.lng);
@@ -1006,17 +830,10 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
       }
 
       // We’ll try nearbySearch with keywords + a few textSearch queries
-      const keywords = propertyType === 'commercial' ? [
-        "office building",
-        "business center", 
-        "commercial complex",
-        "office tower",
-        "business park",
-        "corporate center"
-      ] : [
+      const keywords = [
         "apartment",
         "residential complex",
-        "housing society", 
+        "housing society",
         "condominium",
         "residential tower"
       ];
@@ -1051,20 +868,10 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
         if(seen.has(key)) continue;
         seen.add(key);
 
-        // Market-based price heuristic
-        const marketPrices = {
-          "kolkata": {"1 BHK": [3500000, 7500000], "2 BHK": [5500000, 12000000], "3 BHK": [8500000, 18000000]},
-          "dubai": {"1 BHK": [800000, 1600000], "2 BHK": [1200000, 2400000], "3 BHK": [1800000, 3600000]},
-          "singapore": {"1 BHK": [850000, 1700000], "2 BHK": [1300000, 2600000], "3 BHK": [1950000, 3900000]}
-        };
-        const cityKey = (city || "").toLowerCase().trim();
-        const currency = cityKey === "kolkata" ? "INR" : cityKey === "dubai" ? "AED" : "SGD";
-        const priceRange = marketPrices[cityKey] || marketPrices["kolkata"];
-        const typeRange = priceRange[type] || priceRange["2 BHK"];
-        const [minPrice, maxPrice] = typeRange;
-        const variation = 0.9 + (Math.random() * 0.2); // Random variation ±10%
-        const low = Math.round(minPrice * variation);
-        const high = Math.round(maxPrice * variation * 0.8);
+        // Price heuristic: set near budget with band based on slack
+        const slack = Math.max(15, Math.min(40, priceSlackPct));
+        const low = Math.round(budget * (1 - slack/100));
+        const high = Math.round(budget * (1 + slack/100));
         const approxPrice = Math.round((low + high)/2);
 
         picked.push({
@@ -1087,24 +894,17 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
       return picked;
     }
 
-    function renderFinder(summary, picks, autoCurrency){
-      // Auto-detect currency from the price_band format
-      let currency = autoCurrency;
-      if (!currency && picks && picks.length > 0) {
-        const band = picks[0].price_band || "";
-        if (band.includes("₹")) currency = "INR";
-        else if (band.includes("AED")) currency = "AED";
-        else if (band.includes("S$")) currency = "SGD";
-        else if (band.includes("$")) currency = "USD";
-        else if (band.includes("£")) currency = "GBP";
-        else currency = "INR"; // fallback
-      }
+    function renderFinder(summary, picks, currency){
       pfSummaryEl().textContent = summary || "(no summary)";
       pfCardsEl().innerHTML = (picks||[]).slice(0,12).map((p,i)=>{
+        const price = fmtMoney(p.price, currency);
+        const band = escapeHTML(p.price_band||"");
         const title = escapeHTML(p.project_name || `Project ${i+1}`);
         const area = escapeHTML(p.area||"-");
         const apt = escapeHTML(p.apartment_type||"-");
         const size = escapeHTML(p.size||"-");
+        const pros = (p.pros||[]).map(x=>`<span class="pill">${escapeHTML(x)}</span>`).join(" ");
+        const cons = (p.cons||[]).map(x=>`<span class="pill">${escapeHTML(x)}</span>`).join(" ");
         const notes = escapeHTML(p.notes||"");
         const gRating = (typeof p.g_rating==='number') ? `<span class="rating"><span class="star">★</span>${p.g_rating.toFixed(1)}</span>` : '';
         return `
@@ -1112,21 +912,33 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
             <div class="prop-title">${title}</div>
             <div class="text-muted small mb-1">${area} • ${apt} • ${size || '—'}</div>
             ${gRating ? `<div class="text-muted small mb-1">${gRating}</div>` : ''}
+            <div class="mt-1"><span class="price">${price}</span> <span class="text-muted">(${band})</span></div>
+            <div class="mt-2">
+              <div class="text-muted small mb-1">Pros</div>
+              <div class="d-flex flex-wrap gap-1">${pros || '<span class="pill">—</span>'}</div>
+            </div>
+            <div class="mt-2">
+              <div class="text-muted small mb-1">Cons</div>
+              <div class="d-flex flex-wrap gap-1">${cons || '<span class="pill">—</span>'}</div>
+            </div>
             <div class="mt-2 small text-muted">${notes}</div>
           </div>`;
       }).join("");
 
       if(!picks.length){
-        pfTableBody().innerHTML = `<tr><td colspan="6" class="text-muted">No results returned. Try adjusting inputs.</td></tr>`;
+        pfTableBody().innerHTML = `<tr><td colspan="8" class="text-muted">No results returned. Try adjusting inputs.</td></tr>`;
       } else {
         pfTableBody().innerHTML = picks.map((p,i)=>{
+          const price = fmtMoney(p.price, currency);
+          const band = escapeHTML(p.price_band||"");
           const title = escapeHTML(p.project_name || `Project ${i+1}`);
           const area = escapeHTML(p.area||"-");
           const apt = escapeHTML(p.apartment_type||"-");
           const size = escapeHTML(p.size||"-");
           const rating = (typeof p.g_rating==='number') ? p.g_rating.toFixed(1) : "";
           return `<tr>
-            <td>${i+1}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${size}</td><td>${rating}</td>
+            <td>${i+1}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${size}</td>
+            <td>${price}</td><td>${band}</td><td>${rating}</td>
           </tr>`;
         }).join("");
         pfBtnCSV().disabled=false; pfBtnXLSX().disabled=false; pfBtnCopyNames().disabled=false;
@@ -1136,20 +948,22 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
     async function runPropertyFinder(){
       const country = document.getElementById('pfCountry').value.trim();
       const city = (document.getElementById('pfCity').value || "").trim();
+      const currency = document.getElementById('pfCurrency').value;
       const type = document.getElementById('pfType').value;
+      const budget = Number(document.getElementById('pfBudget').value || 0);
       const locality = (document.getElementById('pfLocality').value || "").trim();
-      const propertyType = document.querySelector('input[name="propertyType"]:checked').value;
 
       const errBox = document.getElementById('pfError');
       errBox.classList.add('d-none');
       if(!city){ errBox.textContent="Please enter a city."; errBox.classList.remove('d-none'); return; }
+      if(!(budget>0)){ errBox.textContent="Please enter a valid numeric budget."; errBox.classList.remove('d-none'); return; }
 
-      const payload = { country, city, type, locality, propertyType };
+      const payload = { country, city, currency, type, budget, locality };
       const msgs = pfPrompt(payload);
 
       pfSummaryEl().textContent = "Working… generating project suggestions…";
       pfCardsEl().innerHTML = "";
-      pfTableBody().innerHTML = `<tr><td colspan="6" class="text-muted">Working...</td></tr>`;
+      pfTableBody().innerHTML = `<tr><td colspan="8" class="text-muted">Working...</td></tr>`;
       pfBtnCSV().disabled = true; pfBtnXLSX().disabled = true; pfBtnCopyNames().disabled = true;
 
       let parsed = null;
@@ -1202,9 +1016,11 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
           const harvested = await harvestNearbyProjects({
             localityPoint,
             city,
+            currency,
             type,
+            budget,
             needCount: need,
-            propertyType: payload.propertyType
+            priceSlackPct: Math.max(relaxed.p, 25) // use relaxed price or 25%, whichever higher
           });
 
           // Merge-dedupe by name (case-insensitive)
@@ -1233,58 +1049,23 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
       const finalSummary =
         (parsed.summary ? parsed.summary + '\n' : '') +
         `• Search completed for ${payload.type} properties in ${payload.city}\n` +
-        `• Found ${pfResults.length} matching projects with various price ranges`;
+        `• Found ${pfResults.length} matching projects within your budget and preferences`;
 
-      renderFinder(finalSummary, pfResults);
+      renderFinder(finalSummary, pfResults, currency);
     }
 
-    // Property type switching functionality
-    function updatePropertyTypeOptions() {
-      const propertyType = document.querySelector('input[name="propertyType"]:checked').value;
-      const typeSelect = document.getElementById('pfType');
-      const typeLabel = document.getElementById('pfTypeLabel');
-      
-      if (propertyType === 'commercial') {
-        typeLabel.textContent = 'Space Type';
-        typeSelect.innerHTML = `
-          <option value="Small Office">Small Office (500-1500 sqft)</option>
-          <option value="Medium Office" selected>Medium Office (1500-3000 sqft)</option>
-          <option value="Large Office">Large Office (3000+ sqft)</option>
-          <option value="Retail Space">Retail Space</option>
-        `;
-      } else {
-        typeLabel.textContent = 'Apt Type';
-        typeSelect.innerHTML = `
-          <option value="1 BHK">1 BHK</option>
-          <option value="2 BHK" selected>2 BHK</option>
-          <option value="3 BHK">3 BHK</option>
-        `;
-      }
-    }
-    
-    // Add event listeners for property type radio buttons
-    document.querySelectorAll('input[name="propertyType"]').forEach(radio => {
-      radio.addEventListener('change', updatePropertyTypeOptions);
-    });
-    
-    // Initialize with residential options
-    updatePropertyTypeOptions();
-    
     document.getElementById('btnFindProperties').addEventListener('click', runPropertyFinder);
-    
-    // Clear functionality (can be called programmatically even without button)
-    const clearPropertyFinder = () => {
+    document.getElementById('btnClearPF').addEventListener('click', ()=>{
       document.getElementById('pfCity').value="";
+      document.getElementById('pfBudget').value="";
       document.getElementById('pfLocality').value="";
-      document.getElementById('propTypeResidential').checked = true;
-      updatePropertyTypeOptions();
       pfSummaryEl().textContent="—";
       pfCardsEl().innerHTML="";
-      pfTableBody().innerHTML=`<tr><td colspan="6" class="text-muted">Run a search to populate results.</td></tr>`;
+      pfTableBody().innerHTML=`<tr><td colspan="8" class="text-muted">Run a search to populate results.</td></tr>`;
       document.getElementById('pfError').classList.add('d-none');
       pfResults = [];
       pfBtnCSV().disabled = true; pfBtnXLSX().disabled = true; pfBtnCopyNames().disabled = true;
-    };
+    });
 
     // Copy names + exports
     document.getElementById('btnPFCopyNames').addEventListener('click', ()=>{
@@ -1303,10 +1084,10 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
     }
     document.getElementById('btnPFExportCSV').addEventListener('click', ()=>{
       if(!pfResults.length) return;
-      const header = ["Project (Exact Map Name)","Area","Type","Size","Rating"];
+      const header = ["Project (Exact Map Name)","Area","Type","Size","Price","Band","Rating"];
       const rows = pfResults.map(p=>[
         p.project_name||"", p.area||"", p.apartment_type||"", p.size||"",
-        (typeof p.g_rating==='number')?p.g_rating:""
+        p.price||"", p.price_band||"", (typeof p.g_rating==='number')?p.g_rating:""
       ]);
       const csv = [header.join(",")].concat(rows.map(r=>r.map(csvCell).join(","))).join("\n");
       const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
@@ -1314,10 +1095,10 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
     });
     document.getElementById('btnPFExportXLSX').addEventListener('click', ()=>{
       if(!pfResults.length) return;
-      const data = [["Project (Exact Map Name)","Area","Type","Size","Rating"]]
+      const data = [["Project (Exact Map Name)","Area","Type","Size","Price","Band","Rating"]]
         .concat(pfResults.map(p=>[
           p.project_name||"", p.area||"", p.apartment_type||"", p.size||"",
-          (typeof p.g_rating==='number')?p.g_rating:""
+          p.price||"", p.price_band||"", (typeof p.g_rating==='number')?p.g_rating:""
         ]));
       const ws = XLSX.utils.aoa_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -1334,55 +1115,24 @@ Return 8–14 diverse, realistic ${payload.propertyType === 'commercial' ? 'comm
     let lastRetailScan=null, lastRetailResults=null;
 
     const DEFAULT_POI_TYPES = [
-      {type:'hospital',label:'Hospitals',priority:'high',color:'#ef4444',emoji:'🏥'},
-      {type:'pharmacy',label:'Pharmacies',priority:'high',color:'#f59e0b',emoji:'💊'},
-      {type:'doctor',label:'Clinics',priority:'high',color:'#10b981',emoji:'🩺'},
-      {type:'ambulance',label:'Ambulances',priority:'high',color:'#dc2626',emoji:'🚑'},
-      {type:'police',label:'Police Stations',priority:'high',color:'#1f2937',emoji:'🚓'},
-      {type:'school',label:'Schools',priority:'medium',color:'#2563eb',emoji:'🏫'},
-      {type:'university',label:'Universities',priority:'medium',color:'#7c3aed',emoji:'🎓'},
-      {type:'gym',label:'Gyms',priority:'low',color:'#0ea5e9',emoji:'🏋️'},
-      {type:'restaurant',label:'Restaurants',priority:'medium',color:'#16a34a',emoji:'🍽️'},
-      {type:'cafe',label:'Cafés',priority:'low',color:'#dc2626',emoji:'☕'},
-      {type:'shopping_mall',label:'Shopping Malls',priority:'medium',color:'#ea580c',emoji:'🛍️'},
-      {type:'bank',label:'Banks',priority:'low',color:'#64748b',emoji:'🏦'},
-      {type:'transit_station',label:'Transit',priority:'high',color:'#f59e0b',emoji:'🚌'},
-      {type:'subway_station',label:'Metro/Subway',priority:'high',color:'#14b8a6',emoji:'🚇'},
-      {type:'supermarket',label:'Supermarkets',priority:'medium',color:'#9333ea',emoji:'🛒'},
-      {type:'store',label:'Stores',priority:'low',color:'#475569',emoji:'🏪'}
+      {type:'hospital',label:'Hospitals',weight:1.6,color:'#ef4444',emoji:'🏥'},
+      {type:'pharmacy',label:'Pharmacies',weight:1.4,color:'#f59e0b',emoji:'💊'},
+      {type:'doctor',label:'Clinics',weight:1.3,color:'#10b981',emoji:'🩺'},
+      {type:'ambulance',label:'Ambulances',weight:1.7,color:'#dc2626',emoji:'🚑'},
+      {type:'police',label:'Police Stations',weight:1.5,color:'#1f2937',emoji:'🚓'},
+      {type:'school',label:'Schools',weight:1.2,color:'#2563eb',emoji:'🏫'},
+      {type:'university',label:'Universities',weight:1.0,color:'#7c3aed',emoji:'🎓'},
+      {type:'gym',label:'Gyms',weight:0.6,color:'#0ea5e9',emoji:'🏋️'},
+      {type:'restaurant',label:'Restaurants',weight:0.8,color:'#16a34a',emoji:'🍽️'},
+      {type:'cafe',label:'Cafés',weight:0.7,color:'#dc2626',emoji:'☕'},
+      {type:'shopping_mall',label:'Shopping Malls',weight:1.0,color:'#ea580c',emoji:'🛍️'},
+      {type:'bank',label:'Banks',weight:0.5,color:'#64748b',emoji:'🏦'},
+      {type:'transit_station',label:'Transit',weight:1.1,color:'#f59e0b',emoji:'🚌'},
+      {type:'subway_station',label:'Metro/Subway',weight:1.1,color:'#14b8a6',emoji:'🚇'},
+      {type:'supermarket',label:'Supermarkets',weight:0.9,color:'#9333ea',emoji:'🛒'},
+      {type:'store',label:'Stores',weight:0.4,color:'#475569',emoji:'🏪'}
     ];
 
-    // Priority to weight mapping
-    function getPriorityWeight(priority) {
-      const weights = { 'high': 1.5, 'medium': 1.0, 'low': 0.5 };
-      return weights[priority] || 1.0;
-    }
-    
-    // Update POI priority and apply color coding
-    function updatePOIPriority(poiType, newPriority) {
-      // Find and update the POI type in our global array
-      const poiIndex = DEFAULT_POI_TYPES.findIndex(poi => poi.type === poiType);
-      if (poiIndex !== -1) {
-        DEFAULT_POI_TYPES[poiIndex].priority = newPriority;
-      }
-      
-      // Update color coding for this dropdown
-      const dropdown = document.getElementById(`poi_priority_${poiType}`);
-      if (dropdown) {
-        dropdown.className = dropdown.className.replace(/priority-(high|medium|low)/g, '');
-        dropdown.classList.add(`priority-${newPriority}`);
-        
-        // Store hidden weight for backend calculations (not shown to user)
-        const weights = { 'high': 1.0, 'medium': 0.5, 'low': 0.2 };
-        dropdown.dataset.weight = weights[newPriority];
-      }
-      
-      // Recalculate scores if we have data
-      if (lastRetailScan) {
-        computeRetailScore();
-      }
-    }
-    
     function safeInitMaps(){ try{ initMap1(); }catch(e){ console.warn("Map1 init error", e); } try{ initMap2(); }catch(e){ console.warn("Map2 init error", e); } }
 
     function initMap1(){
@@ -1675,24 +1425,19 @@ result
       DEFAULT_POI_TYPES.forEach(t=>{
         const div=document.createElement('div'); div.className='col-12';
         div.innerHTML=`
-          <div class="poi-control-row">
-            <div class="poi-left-section">
-              <span class="poi-legend-dot" style="background:${t.color}"></span>
-              <div class="poi-switch">
-                <input class="form-check-input" type="checkbox" id="poi_ck_${t.type}" checked>
-                <label class="form-check-label" for="poi_ck_${t.type}">${t.emoji} ${t.label}</label>
-              </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="legend-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.color}"></span>
+            <div class="form-check form-switch me-2">
+              <input class="form-check-input" type="checkbox" id="poi_ck_${t.type}" checked>
+              <label class="form-check-label" for="poi_ck_${t.type}">${t.emoji} ${t.label}</label>
             </div>
-            <select id="poi_priority_${t.type}" class="priority-select priority-${t.priority}" onchange="updatePOIPriority('${t.type}', this.value)">
-              <option value="high" ${t.priority === 'high' ? 'selected' : ''}>🔴 High Importance</option>
-              <option value="medium" ${t.priority === 'medium' ? 'selected' : ''}>🟡 Medium Importance</option>
-              <option value="low" ${t.priority === 'low' ? 'selected' : ''}>🟢 Low Importance</option>
-            </select>
+            <div class="input-group input-group-sm" style="width:150px">
+              <span class="input-group-text">Weight</span>
+              <input id="poi_wt_${t.type}" type="number" class="form-control" step="0.1" value="${t.weight}">
+            </div>
           </div>`;
         list.appendChild(div);
-        const lg=document.createElement('span'); 
-        lg.style.cssText = 'display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; font-size: 13px; font-weight: 500;';
-        lg.innerHTML=`<span class="poi-legend-dot" style="background:${t.color}"></span>${t.emoji} ${t.label}`;
+        const lg=document.createElement('span'); lg.innerHTML=`<span class="legend-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.color}"></span>${t.emoji} ${t.label} `;
         legend.appendChild(lg);
       });
     }
@@ -1769,9 +1514,8 @@ result
         const weights = {};
         DEFAULT_POI_TYPES.forEach(t => {
           const ckEl = document.getElementById('poi_ck_' + t.type);
-          const priority = DEFAULT_POI_TYPES.find(poi => poi.type === t.type)?.priority || 'medium';
-          const priorityWeight = getPriorityWeight(priority);
-          weights[t.type] = (ckEl && ckEl.checked) ? priorityWeight : 0;
+          const wtEl = document.getElementById('poi_wt_' + t.type);
+          weights[t.type] = (ckEl && ckEl.checked) ? (isFinite(parseFloat(wtEl.value)) ? parseFloat(wtEl.value) : 0) : 0;
         });
         const cts = {}, rts = {};
         Object.keys(weights).forEach(k=>{
@@ -1808,42 +1552,11 @@ json.dumps(result)
           tr.innerHTML = `<td>${lbl}</td><td>${(+d.count).toFixed(0)}</td><td>${(+d.avg_rating).toFixed(2)}</td><td>${(+d.weight).toFixed(2)}</td><td>${(+d.component).toFixed(2)}</td>`;
           tb.appendChild(tr);
         });
-        // Calculate score breakdown by priority
-        let scoreBreakdown = '';
-        let totalScore = 0;
-        const priorityTotals = { high: 0, medium: 0, low: 0 };
-        
-        DEFAULT_POI_TYPES.forEach(t => {
-          const ckEl = document.getElementById('poi_ck_' + t.type);
-          if (ckEl && ckEl.checked && lastRetailScan.counts && lastRetailScan.counts[t.type]) {
-            const count = lastRetailScan.counts[t.type] || 0;
-            const priority = t.priority;
-            const weight = getPriorityWeight(priority);
-            const contribution = count * weight;
-            totalScore += contribution;
-            priorityTotals[priority] += contribution;
-            
-            const priorityIcon = priority === 'high' ? '🔴' : priority === 'medium' ? '🟡' : '🟢';
-            const priorityText = priority === 'high' ? 'High Importance' : priority === 'medium' ? 'Medium Importance' : 'Low Importance';
-            scoreBreakdown += `${t.emoji} ${t.label}: ${count > 0 ? `${count} facilities available nearby` : 'Limited availability in area'} (${priorityIcon} ${priorityText})\n`;
-          }
-        });
-        
         const lines = [];
-        lines.push(`📍 Center: ${lastRetailScan.center.lat.toFixed(6)}, ${lastRetailScan.center.lng.toFixed(6)}`);
-        lines.push(`📏 Radius: ${lastRetailScan.radius} m`);
-        lines.push(`🔍 Filters: rating>=${lastRetailScan.minRating||'any'}; open=${lastRetailScan.openNow}`);
-        lines.push(``);
-        const ratingText = totalScore >= 15 ? 'Excellent' : totalScore >= 10 ? 'Very Good' : totalScore >= 5 ? 'Good' : 'Average';
-        lines.push(`🏢 LOCATION CONVENIENCE SUMMARY:`);
-        lines.push(``);
-        lines.push(`📍 Area Assessment: ${ratingText} location for daily needs`);
-        lines.push(`🔴 High Importance Facilities: ${Math.round(priorityTotals.high)} options nearby`);
-        lines.push(`🟡 Medium Importance Facilities: ${Math.round(priorityTotals.medium)} options nearby`);
-        lines.push(`🟢 Low Importance Facilities: ${Math.round(priorityTotals.low)} options nearby`);
-        lines.push(``);
-        lines.push(`🏢 AVAILABLE NEARBY AMENITIES:`);
-        lines.push(scoreBreakdown);
+        lines.push(`Center: ${lastRetailScan.center.lat.toFixed(6)}, ${lastRetailScan.center.lng.toFixed(6)}`);
+        lines.push(`Radius: ${lastRetailScan.radius} m`);
+        lines.push(`Filters: rating>=${lastRetailScan.minRating||'any'}; open=${lastRetailScan.openNow}`);
+        lines.push(`Raw Score: ${(+obj.raw_score).toFixed(2)} • Normalized: ${(+obj.normalized_score).toFixed(3)}`);
         document.getElementById('retailBreakdown').textContent = lines.join('\n');
         document.getElementById('scoreErr').classList.add('d-none');
       }catch(err){
@@ -1962,22 +1675,15 @@ json.dumps(result)
       const body = document.getElementById('poiFlatBody');
       const rows = currentPOISelection();
       if(!rows.length){
-        body.innerHTML = `<tr><td colspan="8" class="text-muted">No items — select a category after scanning, or adjust your filters.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" class="text-muted">No items — select a category after scanning, or adjust your filters.</td></tr>`;
         return;
       }
-      body.innerHTML = rows.map(r=>{
-        const poiType = DEFAULT_POI_TYPES.find(p => p.type === r.type);
-        const priority = poiType?.priority || 'medium';
-        const priorityBadge = priority === 'high' ? '<span class="badge bg-danger">🔴 High</span>' : 
-                             priority === 'medium' ? '<span class="badge bg-warning">🟡 Medium</span>' : 
-                             '<span class="badge bg-success">🟢 Low</span>';
-        return `<tr>
-          <td>${r.idx}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.address)}</td>
-          <td>${r.rating!==''?Number(r.rating).toFixed(1):''}</td><td>${r.ratingCount}</td>
-          <td>${r.type}</td><td>${priorityBadge}</td>
-          <td>${r.link ? `<a href="${r.link}" target="_blank" rel="noopener">Open</a>` : ''}</td>
-        </tr>`;
-      }).join('');
+      body.innerHTML = rows.map(r=>`<tr>
+        <td>${r.idx}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.address)}</td>
+        <td>${r.rating!==''?Number(r.rating).toFixed(1):''}</td><td>${r.ratingCount}</td>
+        <td>${r.type}</td>
+        <td>${r.link ? `<a href="${r.link}" target="_blank" rel="noopener">Open</a>` : ''}</td>
+      </tr>`).join('');
     }
 
     // Export functionality for POI list in second tab
@@ -1987,19 +1693,14 @@ json.dumps(result)
         alert('No POI data to export. Please scan an area first and select a category.');
         return;
       }
-      const header = ["#","Name","Address","Rating","Ratings Count","Type","Priority","Google Maps"];
-      const csvRows = rows.map(r=>{
-        const poiType = DEFAULT_POI_TYPES.find(p => p.type === r.type);
-        const priority = poiType?.priority || 'medium';
-        return [
-          r.idx, r.name, r.address, 
-          r.rating !== '' ? Number(r.rating).toFixed(1) : '',
-          r.ratingCount || '',
-          r.type || '',
-          priority,
-          r.link || ''
-        ];
-      });
+      const header = ["#","Name","Address","Rating","Ratings Count","Type","Google Maps"];
+      const csvRows = rows.map(r=>[
+        r.idx, r.name, r.address, 
+        r.rating !== '' ? Number(r.rating).toFixed(1) : '',
+        r.ratingCount || '',
+        r.type || '',
+        r.link || ''
+      ]);
       const csv = [header.join(",")].concat(csvRows.map(r=>r.map(csvCell).join(","))).join("\n");
       const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
       downloadBlob(`poi_export_${Date.now()}.csv`, blob);
@@ -2011,19 +1712,14 @@ json.dumps(result)
         alert('No POI data to export. Please scan an area first and select a category.');
         return;
       }
-      const data = [["#","Name","Address","Rating","Ratings Count","Type","Priority","Google Maps"]]
-        .concat(rows.map(r=>{
-          const poiType = DEFAULT_POI_TYPES.find(p => p.type === r.type);
-          const priority = poiType?.priority || 'medium';
-          return [
-            r.idx, r.name, r.address,
-            r.rating !== '' ? Number(r.rating).toFixed(1) : '',
-            r.ratingCount || '',
-            r.type || '',
-            priority,
-            r.link || ''
-          ];
-        }));
+      const data = [["#","Name","Address","Rating","Ratings Count","Type","Google Maps"]]
+        .concat(rows.map(r=>[
+          r.idx, r.name, r.address,
+          r.rating !== '' ? Number(r.rating).toFixed(1) : '',
+          r.ratingCount || '',
+          r.type || '',
+          r.link || ''
+        ]));
       const ws = XLSX.utils.aoa_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "POI_Data");
