@@ -137,8 +137,8 @@
     
     /* Priority Dropdown Styles */
     .priority-select {
-      min-width: 160px;
-      width: 160px;
+      min-width: 140px;
+      width: 140px;
       font-size: 12px;
       padding: 6px 8px;
       border-radius: 6px;
@@ -146,6 +146,12 @@
       background: white;
       transition: all 0.2s ease;
       font-weight: 500;
+      position: relative;
+    }
+    
+    .priority-select:focus,
+    .priority-select:active {
+      z-index: 999;
     }
     
     .priority-select:focus {
@@ -161,6 +167,24 @@
       white-space: nowrap;
     }
     
+    .priority-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      position: relative;
+      z-index: 1;
+      margin-left: 10px;
+      min-height: 50px;
+    }
+    
+    .priority-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+    
     /* POI Control Row Styles */
     .poi-control-row {
       display: flex;
@@ -170,9 +194,10 @@
       background: linear-gradient(135deg, #ffffff, #f8fafc);
       border-radius: 10px;
       border: 1px solid #e2e8f0;
-      margin-bottom: 6px;
+      margin-bottom: 12px;
       transition: all 0.3s ease;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      position: relative;
     }
     
     .poi-control-row:hover {
@@ -421,7 +446,7 @@
           <div class="table-responsive mt-3">
             <table class="table table-sm">
               <thead class="table-light">
-                <tr><th>Type</th><th>Count</th><th>Avg Rating</th><th>Importance</th></tr>
+                <tr><th>Type</th><th>Count</th><th>Avg Rating</th></tr>
               </thead>
               <tbody id="retTableBody"></tbody>
             </table>
@@ -452,10 +477,10 @@
             <table class="table table-sm table-hover" id="poiFlatTable">
               <thead class="table-light">
                 <tr>
-                  <th>#</th><th>Name</th><th>Address</th><th>Rating</th><th>Ratings Count</th><th>Type</th><th>Importance</th><th>Google Maps</th>
+                  <th>#</th><th>Name</th><th>Address</th><th>Rating</th><th>Ratings Count</th><th>Type</th><th>Google Maps</th>
                 </tr>
               </thead>
-              <tbody id="poiFlatBody"><tr><td colspan="8" class="text-muted">Scan an area, choose a category, and the list will appear here.</td></tr></tbody>
+              <tbody id="poiFlatBody"><tr><td colspan="7" class="text-muted">Scan an area, choose a category, and the list will appear here.</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1680,11 +1705,14 @@ result
                 <label class="form-check-label" for="poi_ck_${t.type}">${t.emoji} ${t.label}</label>
               </div>
             </div>
-            <select id="poi_priority_${t.type}" class="priority-select priority-${t.priority}" onchange="updatePOIPriority('${t.type}', this.value)">
-              <option value="high" ${t.priority === 'high' ? 'selected' : ''}>🔴 High Importance</option>
-              <option value="medium" ${t.priority === 'medium' ? 'selected' : ''}>🟡 Medium Importance</option>
-              <option value="low" ${t.priority === 'low' ? 'selected' : ''}>🟢 Low Importance</option>
-            </select>
+            <div class="priority-section">
+              <div class="priority-label">Importance:</div>
+              <select id="poi_priority_${t.type}" class="priority-select priority-${t.priority}" onchange="updatePOIPriority('${t.type}', this.value)">
+                <option value="high" ${t.priority === 'high' ? 'selected' : ''}>🔴 High</option>
+                <option value="medium" ${t.priority === 'medium' ? 'selected' : ''}>🟡 Medium</option>
+                <option value="low" ${t.priority === 'low' ? 'selected' : ''}>🟢 Low</option>
+              </select>
+            </div>
           </div>`;
         list.appendChild(div);
         const lg=document.createElement('span'); 
@@ -1804,9 +1832,7 @@ json.dumps(result)
           const tr = document.createElement('tr');
           const poiMeta = DEFAULT_POI_TYPES.find(x=>x.type===t);
           const priority = poiMeta ? poiMeta.priority : 'medium';
-          const importanceText = priority === 'high' ? 'High' : priority === 'medium' ? 'Medium' : 'Low';
-          const importanceIcon = priority === 'high' ? '🔴' : priority === 'medium' ? '🟡' : '🟢';
-          tr.innerHTML = `<td>${lbl}</td><td>${(+d.count).toFixed(0)}</td><td>${(+d.avg_rating).toFixed(2)}</td><td>${importanceIcon} ${importanceText}</td>`;
+          tr.innerHTML = `<td>${lbl}</td><td>${(+d.count).toFixed(0)}</td><td>${(+d.avg_rating).toFixed(2)}</td>`;
           tb.appendChild(tr);
         });
         // Calculate score breakdown by priority
@@ -1962,19 +1988,16 @@ json.dumps(result)
       const body = document.getElementById('poiFlatBody');
       const rows = currentPOISelection();
       if(!rows.length){
-        body.innerHTML = `<tr><td colspan="8" class="text-muted">No items — select a category after scanning, or adjust your filters.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" class="text-muted">No items — select a category after scanning, or adjust your filters.</td></tr>`;
         return;
       }
       body.innerHTML = rows.map(r=>{
         const poiType = DEFAULT_POI_TYPES.find(p => p.type === r.type);
         const priority = poiType?.priority || 'medium';
-        const priorityBadge = priority === 'high' ? '<span class="badge bg-danger">🔴 High</span>' : 
-                             priority === 'medium' ? '<span class="badge bg-warning">🟡 Medium</span>' : 
-                             '<span class="badge bg-success">🟢 Low</span>';
         return `<tr>
           <td>${r.idx}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.address)}</td>
           <td>${r.rating!==''?Number(r.rating).toFixed(1):''}</td><td>${r.ratingCount}</td>
-          <td>${r.type}</td><td>${priorityBadge}</td>
+          <td>${r.type}</td>
           <td>${r.link ? `<a href="${r.link}" target="_blank" rel="noopener">Open</a>` : ''}</td>
         </tr>`;
       }).join('');
@@ -1987,16 +2010,13 @@ json.dumps(result)
         alert('No POI data to export. Please scan an area first and select a category.');
         return;
       }
-      const header = ["#","Name","Address","Rating","Ratings Count","Type","Priority","Google Maps"];
+      const header = ["#","Name","Address","Rating","Ratings Count","Type","Google Maps"];
       const csvRows = rows.map(r=>{
-        const poiType = DEFAULT_POI_TYPES.find(p => p.type === r.type);
-        const priority = poiType?.priority || 'medium';
         return [
           r.idx, r.name, r.address, 
           r.rating !== '' ? Number(r.rating).toFixed(1) : '',
           r.ratingCount || '',
           r.type || '',
-          priority,
           r.link || ''
         ];
       });
@@ -2011,16 +2031,13 @@ json.dumps(result)
         alert('No POI data to export. Please scan an area first and select a category.');
         return;
       }
-      const data = [["#","Name","Address","Rating","Ratings Count","Type","Priority","Google Maps"]]
+      const data = [["#","Name","Address","Rating","Ratings Count","Type","Google Maps"]]
         .concat(rows.map(r=>{
-          const poiType = DEFAULT_POI_TYPES.find(p => p.type === r.type);
-          const priority = poiType?.priority || 'medium';
           return [
             r.idx, r.name, r.address,
             r.rating !== '' ? Number(r.rating).toFixed(1) : '',
             r.ratingCount || '',
             r.type || '',
-            priority,
             r.link || ''
           ];
         }));
