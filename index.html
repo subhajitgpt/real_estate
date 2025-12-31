@@ -202,6 +202,80 @@
       box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
     }
     
+    /* Advanced Filters Styling */
+    #advancedFilters .card-body {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    
+    #advancedFilters input[type="number"],
+    #advancedFilters select {
+      font-size: 13px;
+    }
+    
+    #advancedFilters .form-check-input:checked {
+      background-color: #3b82f6;
+      border-color: #3b82f6;
+    }
+    
+    /* Results info badge */
+    #pfResultCount {
+      font-weight: 600;
+      color: #1e40af;
+    }
+    
+    #pfActiveFilters .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+    }
+    
+    /* Save/Compare buttons in cards */
+    .prop-card .btn-sm {
+      padding: 2px 6px;
+      font-size: 14px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    
+    .prop-card .btn-outline-secondary {
+      border-color: #d1d5db;
+    }
+    
+    .prop-card .btn-danger {
+      background-color: #ef4444;
+      border-color: #ef4444;
+    }
+    
+    .prop-card .btn-warning {
+      background-color: #f59e0b;
+      border-color: #f59e0b;
+      color: white;
+    }
+    
+    /* Pagination styling */
+    #pfPagination {
+      padding: 15px 0;
+    }
+    
+    #pfPageInfo {
+      font-weight: 600;
+      color: #677084;
+    }
+    
+    /* Sort dropdown */
+    #pfSortBy {
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      padding: 4px 8px;
+    }
+    
+    #pfSortBy:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+      outline: none;
+    }
+    
     .btn-outline-secondary {
       border-color: #1e40af;
       color: #1e40af;
@@ -350,7 +424,7 @@
                   <label class="form-label">City</label>
                   <input id="pfCity" class="form-control" placeholder="e.g., Kolkata, Dubai">
                 </div>
-                <div class="col-6">
+                <div class="col-12">
                   <label class="form-label" id="pfTypeLabel">Apt Type</label>
                   <select id="pfType" class="form-select">
                     <option value="1 BHK">1 BHK</option>
@@ -358,9 +432,62 @@
                     <option value="3 BHK">3 BHK</option>
                   </select>
                 </div>
+                
+                <!-- NEW FIELDS: Size, Floor, Budget, etc. -->
+                <div class="col-12">
+                  <label class="form-label">Approx Size</label>
+                  <div class="row g-2">
+                    <div class="col-5">
+                      <input id="pfSize" type="number" class="form-control" placeholder="e.g., 700">
+                    </div>
+                    <div class="col-3">
+                      <select id="pfSizeUnit" class="form-select">
+                        <option value="sqft" selected>sq. ft</option>
+                        <option value="sqm">sq. m</option>
+                      </select>
+                    </div>
+                    <div class="col-4">
+                      <select id="pfSizeType" class="form-select">
+                        <option value="carpet">Carpet Area</option>
+                        <option value="builtup" selected>Built-up Area</option>
+                        <option value="super">Super Built-up</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
                 <div class="col-6">
-                  <label class="form-label">Locality</label>
-                  <input id="pfLocality" class="form-control" placeholder="e.g., New Town, Marina, Downtown">
+                  <label class="form-label">Floor Preference</label>
+                  <input id="pfFloor" class="form-control" placeholder="e.g., 1st, 2-4, Ground (optional)">
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Budget (in Lacs)</label>
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <input id="pfBudgetMin" type="number" class="form-control" placeholder="Min (e.g., 30)">
+                    </div>
+                    <div class="col-6">
+                      <input id="pfBudgetMax" type="number" class="form-control" placeholder="Max (e.g., 35)">
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Currency</label>
+                  <select id="pfCurrency" class="form-select">
+                    <option value="INR" selected>INR (India)</option>
+                    <option value="AED">AED (UAE)</option>
+                    <option value="USD">USD (US)</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Preferred Locality (Select up to 3 - Optional)</label>
+                  <input id="pfPrefLoc1" class="form-control mb-2" placeholder="Locality 1 (e.g., Dhakuria)">
+                  <input id="pfPrefLoc2" class="form-control mb-2" placeholder="Locality 2 (e.g., Jadavpur)">
+                  <input id="pfPrefLoc3" class="form-control" placeholder="Locality 3 (e.g., Tollygunge)">
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Any Other Criteria (Optional)</label>
+                  <textarea id="pfOtherCriteria" class="form-control" rows="2" maxlength="150" placeholder="e.g., Preferably 5-10 mins walking distance from nearest auto stand. Vastu compliant flats preferred."></textarea>
+                  <div class="form-text small"><span id="criteriaCharCount">0</span>/150 characters</div>
                 </div>
               </div>
               <div class="mt-3 d-grid">
@@ -368,22 +495,53 @@
               </div>
               <div class="alert alert-info mt-3 mb-0 text-center" style="font-size: 13px; padding: 12px; border-radius: 8px; background: linear-gradient(135deg, #e3f2fd, #f8f9fa); border: 1px solid #bee5eb;">
                 <i class="fas fa-info-circle me-2 text-info"></i>
-                <strong>Note:</strong> This is an analytical and location intelligence tool.<br>
-                <span class="text-muted">For details on pricing and logistics, please see country-specific advertisement sites or property websites.</span>
+                <strong>⚠️ Important Disclaimer:</strong><br>
+                <span style="font-size: 12px;">All prices shown are <strong>estimates</strong> from AI analysis or heuristic algorithms. They are NOT verified listing prices.</span><br>
+                <span class="text-muted" style="font-size: 11px;">For accurate, current pricing please visit official property portals (99acres.com, MagicBricks.com, Housing.com) or contact builders directly. This tool is for analytical and location intelligence purposes only.</span>
               </div>
               <div id="pfError" class="text-danger small mt-2 d-none"></div>
             </div>
           </div>
           <div class="col-lg-8">
             <div class="card card-soft p-3">
-              <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center justify-content-between mb-2">
                 <h6 class="mb-0">AI Suggestions (Projects/Societies)</h6>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                  <!-- Sort and Filter Controls -->
+                  <select id="pfSortBy" class="form-select form-select-sm" style="width:auto">
+                    <option value="default">Sort: Default</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="area-low">Area: Small to Large</option>
+                    <option value="area-high">Area: Large to Small</option>
+                    <option value="rating-high">Rating: High to Low</option>
+                  </select>
                   <button id="btnPFCopyNames" class="btn btn-outline-primary btn-sm" disabled>Copy Names</button>
                   <button id="btnPFExportCSV" class="btn btn-outline-secondary btn-sm" disabled>Export CSV</button>
                   <button id="btnPFExportXLSX" class="btn btn-outline-secondary btn-sm" disabled>Export XLSX</button>
                 </div>
               </div>
+              
+              <!-- Results count & active filters display -->
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="small text-muted">
+                  <span id="pfResultCount">0 properties found</span>
+                  <span id="pfActiveFilters" class="ms-2"></span>
+                </div>
+                <div class="small">
+                  <label class="me-2">Show per page:</label>
+                  <select id="pfPageSize" class="form-select form-select-sm d-inline-block" style="width:auto">
+                    <option value="12" selected>12</option>
+                    <option value="24">24</option>
+                    <option value="48">48</option>
+                    <option value="all">All</option>
+                  </select>
+                </div>
+              </div>
+              <div class="alert alert-warning mb-2 py-1 px-2" style="font-size:10px;border-radius:6px;">
+                <strong>💡 Price Disclaimer:</strong> All prices are AI-generated estimates based on market data. Verify actual prices on official property portals.
+              </div>
+              
               <div class="form-help">Each project name is normalized to match its <b>Google Maps place name</b> when possible.</div>
               
               <!-- Data Sources Section -->
@@ -396,14 +554,21 @@
 
               <div id="pfCards" class="finder-cards mt-2"></div>
 
+              <!-- Pagination Controls -->
+              <div id="pfPagination" class="d-flex justify-content-center align-items-center gap-2 mt-3" style="display:none!important">
+                <button id="btnPrevPage" class="btn btn-sm btn-outline-primary" disabled>← Previous</button>
+                <span id="pfPageInfo" class="small text-muted mx-3">Page 1 of 1</span>
+                <button id="btnNextPage" class="btn btn-sm btn-outline-primary" disabled>Next →</button>
+              </div>
+
               <div class="table-responsive mt-3">
                 <table class="table table-sm table-hover">
                   <thead class="table-light">
                     <tr>
-                      <th>#</th><th>Project (Exact Map Name)</th><th>Area</th><th>Type</th><th>Size</th><th>Rating</th><th>Source URL</th>
+                      <th>#</th><th>Project (Exact Map Name)</th><th>Area</th><th>Type</th><th>Floor</th><th>Size (Carpet/Built-up)</th><th>Price</th><th>Agent Phone</th><th>Source URL</th>
                     </tr>
                   </thead>
-                  <tbody id="pfTableBody"><tr><td colspan="7" class="text-muted">Run a search to populate results.</td></tr></tbody>
+                  <tbody id="pfTableBody"><tr><td colspan="9" class="text-muted">Run a search to populate results.</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -1214,8 +1379,12 @@ Schema:\n\
       \"area\": \"Area/Locality\",\n\
       \"apartment_type\": \"1 BHK | 2 BHK | 3 BHK\",\n\
       \"size\": \"e.g., 1100 sqft\",\n\
+      \"carpet_area\": \"e.g., 900 sqft (if available)\",\n\
+      \"builtup_area\": \"e.g., 1100 sqft (if available)\",\n\
+      \"floor\": \"Exact floor number (e.g., 1st, 2nd, Ground)\",\n\
       \"price\": 0,\n\
       \"price_band\": \"e.g., 65L–78L (current market rate)\",\n\
+      \"agent_phone\": \"Agent/broker contact number (if available)\",\n\
       \"pros\": [\"bullet\", \"bullet\", \"bullet\"],\n\
       \"cons\": [\"bullet\", \"bullet\"],\n\
       \"notes\": \"Key highlights: connectivity, amenities, builder reputation (<=35 words)\",\n\
@@ -1231,6 +1400,7 @@ VERIFICATION CHECKLIST:\n\
 ✓ Source URL must be included for each listing\n\
 ✓ Prices should reflect current market rates\n\
 ✓ Project names must match Google Maps entries\n\
+✓ Include agent phone, exact floor, carpet vs built-up area when available\n\
 ✓ Prioritize properties with active listings" },
         { role: "user", content:
 `SEARCH FOR REAL ${payload.propertyType === 'commercial' ? 'COMMERCIAL' : 'RESIDENTIAL'} PROPERTIES:\n\
@@ -1239,6 +1409,11 @@ Location: ${payload.city}, ${payload.country}\n\
 Property Type: ${payload.propertyType === 'commercial' ? 'COMMERCIAL office buildings, business centers, retail spaces, and commercial complexes' : 'RESIDENTIAL apartment complexes, housing societies, and residential towers'}\n\
 Configuration: ${payload.type} ${payload.propertyType === 'commercial' ? 'office/retail space' : 'apartments'}\n\
 Preferred Locality: ${payload.locality || "(Any)"}\n\
+${payload.size ? `Size: ${payload.size} ${payload.sizeUnit} (${payload.sizeType})\n` : ''}\
+${payload.floorPref ? `Floor Preference: ${payload.floorPref}\n` : ''}\
+${payload.budgetMin || payload.budgetMax ? `Budget Range: ${payload.budgetMin ? payload.budgetMin + 'L' : ''}${payload.budgetMin && payload.budgetMax ? '-' : ''}${payload.budgetMax ? payload.budgetMax + 'L' : ''} ${payload.currency}\n` : ''}\
+${payload.prefLoc1 || payload.prefLoc2 || payload.prefLoc3 ? `Preferred Localities: ${[payload.prefLoc1, payload.prefLoc2, payload.prefLoc3].filter(Boolean).join(', ')}\n` : ''}\
+${payload.otherCriteria ? `Other Criteria: ${payload.otherCriteria}\n` : ''}\
 \n\
 SEARCH INSTRUCTIONS:\n\
 ${payload.country === 'India' ? 
@@ -1265,6 +1440,18 @@ REQUIREMENTS:\n\
   - Verified builder/developer credentials\n\
   - Good connectivity and amenities\n\
   - Competitive pricing for the locality\n\
+${payload.size ? `  - Size around ${payload.size} ${payload.sizeUnit} (${payload.sizeType})\n` : ''}\
+${payload.floorPref ? `  - Floor: ${payload.floorPref}\n` : ''}\
+${payload.budgetMin || payload.budgetMax ? `  - Budget within specified range\n` : ''}\
+${payload.otherCriteria ? `  - ${payload.otherCriteria}\n` : ''}\
+\n\
+For each property found, extract and include:\n\
+- Agent/broker phone numbers\n\
+- Exact floor number\n\
+- Both built-up and carpet area (if available)\n\
+- Direct listing/uploadable link\n\
+\n\
+Present results in a clear, structured format that can be converted to a table.\n\
 \n\
 Size in sqft. Include diverse options across different price ranges and localities within ${payload.city}.` }
       ];
@@ -1623,7 +1810,12 @@ Size in sqft. Include diverse options across different price ranges and localiti
         const title = escapeHTML(p.project_name || `Project ${i+1}`);
         const area = escapeHTML(p.area||"-");
         const apt = escapeHTML(p.apartment_type||"-");
-        const size = escapeHTML(p.size||"-");
+        const floor = p.floor ? ` • Floor: ${escapeHTML(p.floor)}` : '';
+        const carpetArea = p.carpet_area || "";
+        const builtupArea = p.builtup_area || p.size || "";
+        const sizeDisplay = carpetArea && builtupArea ? `${carpetArea} (carpet) / ${builtupArea} (built-up)` : (builtupArea || "-");
+        const price = p.price_band || (p.price ? `${p.price}` : "");
+        const agentPhone = p.agent_phone ? `<div class="small text-muted">📞 ${escapeHTML(p.agent_phone)}</div>` : '';
         const notes = escapeHTML(p.notes||"");
         const gRating = (typeof p.g_rating==='number') ? `<span class="rating"><span class="star">★</span>${p.g_rating.toFixed(1)}</span>` : '';
         const sourceInfo = p.source_url ? `
@@ -1644,7 +1836,10 @@ Size in sqft. Include diverse options across different price ranges and localiti
         return `
           <div class="prop-card">
             <div class="prop-title">${title}</div>
-            <div class="text-muted small mb-1">${area} • ${apt} • ${size || '—'}</div>
+            <div class="text-muted small mb-1">${area} • ${apt}${floor}</div>
+            <div class="text-muted small mb-1">📐 Size: ${sizeDisplay}</div>
+            ${price ? `<div class="text-muted small mb-1">💰 Price: ${price}</div>` : ''}
+            ${agentPhone}
             ${gRating ? `<div class="text-muted small mb-1">${gRating}</div>` : ''}
             <div class="mt-2 small text-muted">${notes}</div>
             ${sourceInfo}
@@ -1652,14 +1847,18 @@ Size in sqft. Include diverse options across different price ranges and localiti
       }).join("");
 
       if(!picks.length){
-        pfTableBody().innerHTML = `<tr><td colspan="7" class="text-muted">No results returned. Try adjusting inputs.</td></tr>`;
+        pfTableBody().innerHTML = `<tr><td colspan="9" class="text-muted">No results returned. Try adjusting inputs.</td></tr>`;
       } else {
         pfTableBody().innerHTML = picks.map((p,i)=>{
           const title = escapeHTML(p.project_name || `Project ${i+1}`);
           const area = escapeHTML(p.area||"-");
           const apt = escapeHTML(p.apartment_type||"-");
-          const size = escapeHTML(p.size||"-");
-          const rating = (typeof p.g_rating==='number') ? p.g_rating.toFixed(1) : "";
+          const floor = escapeHTML(p.floor||"-");
+          const carpetArea = p.carpet_area || "-";
+          const builtupArea = p.builtup_area || p.size || "-";
+          const sizeDisplay = `${carpetArea} / ${builtupArea}`;
+          const price = p.price_band || (p.price ? `${p.price}` : "-");
+          const agentPhone = escapeHTML(p.agent_phone || "-");
           const sourceUrl = p.source_url ? `
             <div style="display:flex; flex-direction:column; gap:4px;">
               <span style="font-size:9px; color:#677084; font-weight:600;">${escapeHTML(p.source_name || 'Property Portal')}</span>
@@ -1671,7 +1870,7 @@ Size in sqft. Include diverse options across different price ranges and localiti
             </div>
           ` : '-';
           return `<tr>
-            <td>${i+1}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${size}</td><td>${rating}</td><td>${sourceUrl}</td>
+            <td>${i+1}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${floor}</td><td style="font-size:10px;">${sizeDisplay}</td><td>${price}</td><td>${agentPhone}</td><td>${sourceUrl}</td>
           </tr>`;
         }).join("");
         pfBtnCSV().disabled=false; pfBtnXLSX().disabled=false; pfBtnCopyNames().disabled=false;
@@ -1682,9 +1881,24 @@ Size in sqft. Include diverse options across different price ranges and localiti
       const country = document.getElementById('pfCountry').value.trim();
       const city = (document.getElementById('pfCity').value || "").trim();
       const type = document.getElementById('pfType').value;
-      const locality = (document.getElementById('pfLocality').value || "").trim();
       const propertyType = document.querySelector('input[name="propertyType"]:checked').value;
       const dataSource = document.getElementById('pfDataSource').value;
+      
+      // Collect new fields
+      const size = document.getElementById('pfSize').value.trim();
+      const sizeUnit = document.getElementById('pfSizeUnit').value;
+      const sizeType = document.getElementById('pfSizeType').value;
+      const floorPref = document.getElementById('pfFloor').value.trim();
+      const budgetMin = document.getElementById('pfBudgetMin').value.trim();
+      const budgetMax = document.getElementById('pfBudgetMax').value.trim();
+      const currency = document.getElementById('pfCurrency').value;
+      const prefLoc1 = document.getElementById('pfPrefLoc1').value.trim();
+      const prefLoc2 = document.getElementById('pfPrefLoc2').value.trim();
+      const prefLoc3 = document.getElementById('pfPrefLoc3').value.trim();
+      const otherCriteria = document.getElementById('pfOtherCriteria').value.trim();
+      
+      // Combine preferred localities into a single locality string
+      const locality = [prefLoc1, prefLoc2, prefLoc3].filter(Boolean).join(', ');
 
       const errBox = document.getElementById('pfError');
       errBox.classList.add('d-none');
@@ -1697,7 +1911,12 @@ Size in sqft. Include diverse options across different price ranges and localiti
         return;
       }
 
-      const payload = { country, city, type, locality, propertyType };
+      const payload = { 
+        country, city, type, propertyType,
+        size, sizeUnit, sizeType, floorPref, 
+        budgetMin, budgetMax, currency,
+        locality, prefLoc1, prefLoc2, prefLoc3, otherCriteria
+      };
       const msgs = pfPrompt(payload);
 
       // Track sources used
@@ -1705,7 +1924,7 @@ Size in sqft. Include diverse options across different price ranges and localiti
 
       pfSummaryEl().textContent = "Working… generating project suggestions…";
       pfCardsEl().innerHTML = "";
-      pfTableBody().innerHTML = `<tr><td colspan="7" class="text-muted">Working...</td></tr>`;
+      pfTableBody().innerHTML = `<tr><td colspan="9" class="text-muted">Working...</td></tr>`;
       pfBtnCSV().disabled = true; pfBtnXLSX().disabled = true; pfBtnCopyNames().disabled = true;
       document.getElementById('pfSources').style.display = 'none';
 
@@ -1753,14 +1972,16 @@ Size in sqft. Include diverse options across different price ranges and localiti
           
           // Count properties with source URLs
           const propsWithSources = parsed.picks ? parsed.picks.filter(p => p.source_url && p.source_url.trim()).length : 0;
+          
+          // Add OpenAI source with price disclaimer
           const sourcePortals = parsed.picks ? [...new Set(parsed.picks.filter(p => p.source_name).map(p => p.source_name))].join(', ') : 'Various sources';
           
-          sourcesUsed.push(`🤖 <strong>OpenAI GPT-4.1 API (Real Property Data Search)</strong><br/><code style="font-size:10px;word-break:break-all;">${openaiUrl}</code><br/><span class="text-muted" style="font-size:10px;">Model: gpt-4.1, Temperature: 0.2 | Searched reliable property portals<br/>✓ ${propsWithSources} properties with verified source URLs${sourcePortals !== 'Various sources' ? `<br/>✓ Sources: ${sourcePortals}` : ''}</span>`);
+          sourcesUsed.push(`🤖 <strong>OpenAI GPT-4.1 API (Real Property Data Search)</strong><br/><code style="font-size:10px;word-break:break-all;">${openaiUrl}</code><br/><span class="text-muted" style="font-size:10px;">Model: gpt-4.1, Temperature: 0.2 | Searched reliable property portals<br/>✓ ${propsWithSources} properties with verified source URLs${sourcePortals !== 'Various sources' ? `<br/>✓ Sources: ${sourcePortals}` : ''}</span><br/><span style="font-size:10px;color:#dc2626;font-weight:600;">⚠️ PRICES ARE AI ESTIMATES - Not official listing prices. Verify actual prices on source URLs or official portals.</span>`);
           picks = Array.isArray(parsed.picks) ? parsed.picks : [];
         }catch(e){
           console.warn("OpenAI unavailable, using local heuristic. Reason:", e.message || e);
           parsed = localHeuristicFinder(payload);
-          sourcesUsed.push(`💻 <strong>Local Heuristic Algorithm (Browser-based)</strong><br/><code style="font-size:10px;word-break:break-all;">No external sources - 100% client-side calculations</code><br/><span class="text-muted" style="font-size:10px;">⚠️ Fallback mode: Generates synthetic property data using hardcoded market knowledge for ${country}. Does NOT pull from Google, property websites, or any external URLs. Uses predefined area names, price ranges, and mathematical models built into this application code.</span>`);
+          sourcesUsed.push(`💻 <strong>Local Heuristic Algorithm (Browser-based)</strong><br/><code style="font-size:10px;word-break:break-all;">No external sources - 100% client-side calculations</code><br/><span class="text-muted" style="font-size:10px;">⚠️ Fallback mode: Generates synthetic property data using hardcoded market knowledge for ${country}. Does NOT pull from Google, property websites, or any external URLs. Uses predefined area names, price ranges, and mathematical models built into this application code.</span><br/><span style="font-size:10px;color:#dc2626;font-weight:600;">⚠️ PRICES ARE SYNTHETIC ESTIMATES - Not real listing prices. Verify on official portals.</span>`);
           picks = Array.isArray(parsed.picks) ? parsed.picks : [];
         }
       }
@@ -1825,6 +2046,11 @@ Size in sqft. Include diverse options across different price ranges and localiti
 
       // Hard limit to 12 for UI (cards/table show first 12)
       pfResults = picks.slice(0, 12);
+      
+      // Store all properties for filtering
+      allProperties = picks;
+      filteredProperties = sortProperties(applyAdvancedFilters(allProperties), document.getElementById('pfSortBy').value);
+      currentPage = 1;
 
       const localityTxt = localityPoint
         ? `Locality center @ (${localityPoint.lat?.toFixed(4)}, ${localityPoint.lng?.toFixed(4)})`
@@ -1833,7 +2059,7 @@ Size in sqft. Include diverse options across different price ranges and localiti
       const finalSummary =
         (parsed.summary ? parsed.summary + '\n' : '') +
         `• Search completed for ${payload.type} properties in ${payload.city}\n` +
-        `• Found ${pfResults.length} matching projects with various price ranges`;
+        `• Found ${picks.length} matching projects with various price ranges`;
 
       // Display sources used
       if(sourcesUsed.length > 0){
@@ -1843,7 +2069,9 @@ Size in sqft. Include diverse options across different price ranges and localiti
         sourcesEl.style.display = 'block';
       }
 
-      renderFinder(finalSummary, pfResults);
+      pfSummaryEl().textContent = finalSummary;
+      renderFilteredProperties();
+      pfBtnCSV().disabled=false; pfBtnXLSX().disabled=false; pfBtnCopyNames().disabled=false;
     }
 
     // Property type switching functionality
@@ -1875,17 +2103,45 @@ Size in sqft. Include diverse options across different price ranges and localiti
     // Initialize with residential options
     updatePropertyTypeOptions();
     
+    // Character counter for other criteria field
+    const otherCriteriaField = document.getElementById('pfOtherCriteria');
+    const charCountDisplay = document.getElementById('criteriaCharCount');
+    otherCriteriaField.addEventListener('input', () => {
+      charCountDisplay.textContent = otherCriteriaField.value.length;
+    });
+    
+    // Auto-set currency based on country selection
+    document.getElementById('pfCountry').addEventListener('change', (e) => {
+      const country = e.target.value;
+      const currencySelect = document.getElementById('pfCurrency');
+      if (country === 'India') {
+        currencySelect.value = 'INR';
+      } else if (country === 'UAE') {
+        currencySelect.value = 'AED';
+      } else {
+        currencySelect.value = 'USD';
+      }
+    });
+    
     document.getElementById('btnFindProperties').addEventListener('click', runPropertyFinder);
     
     // Clear functionality (can be called programmatically even without button)
     const clearPropertyFinder = () => {
       document.getElementById('pfCity').value="";
-      document.getElementById('pfLocality').value="";
+      document.getElementById('pfSize').value="";
+      document.getElementById('pfFloor').value="";
+      document.getElementById('pfBudgetMin').value="";
+      document.getElementById('pfBudgetMax').value="";
+      document.getElementById('pfPrefLoc1').value="";
+      document.getElementById('pfPrefLoc2').value="";
+      document.getElementById('pfPrefLoc3').value="";
+      document.getElementById('pfOtherCriteria').value="";
+      document.getElementById('criteriaCharCount').textContent="0";
       document.getElementById('propTypeResidential').checked = true;
       updatePropertyTypeOptions();
       pfSummaryEl().textContent="—";
       pfCardsEl().innerHTML="";
-      pfTableBody().innerHTML=`<tr><td colspan="6" class="text-muted">Run a search to populate results.</td></tr>`;
+      pfTableBody().innerHTML=`<tr><td colspan="9" class="text-muted">Run a search to populate results.</td></tr>`;
       document.getElementById('pfError').classList.add('d-none');
       document.getElementById('pfSources').style.display = 'none';
       pfResults = [];
@@ -1909,10 +2165,11 @@ Size in sqft. Include diverse options across different price ranges and localiti
     }
     document.getElementById('btnPFExportCSV').addEventListener('click', ()=>{
       if(!pfResults.length) return;
-      const header = ["Project (Exact Map Name)","Area","Type","Size","Rating"];
+      const header = ["Project (Exact Map Name)","Area","Type","Floor","Carpet Area","Built-up Area","Price","Agent Phone","Source URL"];
       const rows = pfResults.map(p=>[
-        p.project_name||"", p.area||"", p.apartment_type||"", p.size||"",
-        (typeof p.g_rating==='number')?p.g_rating:""
+        p.project_name||"", p.area||"", p.apartment_type||"", p.floor||"",
+        p.carpet_area||"", p.builtup_area||p.size||"", p.price_band||p.price||"",
+        p.agent_phone||"", p.source_url||""
       ]);
       const csv = [header.join(",")].concat(rows.map(r=>r.map(csvCell).join(","))).join("\n");
       const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
@@ -1920,10 +2177,11 @@ Size in sqft. Include diverse options across different price ranges and localiti
     });
     document.getElementById('btnPFExportXLSX').addEventListener('click', ()=>{
       if(!pfResults.length) return;
-      const data = [["Project (Exact Map Name)","Area","Type","Size","Rating"]]
+      const data = [["Project (Exact Map Name)","Area","Type","Floor","Carpet Area","Built-up Area","Price","Agent Phone","Source URL"]]
         .concat(pfResults.map(p=>[
-          p.project_name||"", p.area||"", p.apartment_type||"", p.size||"",
-          (typeof p.g_rating==='number')?p.g_rating:""
+          p.project_name||"", p.area||"", p.apartment_type||"", p.floor||"",
+          p.carpet_area||"", p.builtup_area||p.size||"", p.price_band||p.price||"",
+          p.agent_phone||"", p.source_url||""
         ]));
       const ws = XLSX.utils.aoa_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -1932,6 +2190,226 @@ Size in sqft. Include diverse options across different price ranges and localiti
       const blob = new Blob([ab], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
       downloadBlob(`project_finder_${Date.now()}.xlsx`, blob);
     });
+
+    // ======================= ADVANCED FILTERING & SORTING =======================
+    
+    let allProperties = []; // Store all unfiltered properties
+    let filteredProperties = []; // Store filtered properties
+    let savedProperties = new Set(); // Save favorite properties
+    let compareList = []; // Properties to compare (max 4)
+    let currentPage = 1;
+    let pageSize = 12;
+    
+    // Apply all filters to properties
+    function applyAdvancedFilters(properties) {
+      // Advanced filters removed - just return all properties
+      return properties;
+    }
+    
+    // Sort properties based on selected criteria
+    function sortProperties(properties, sortBy) {
+      const sorted = [...properties];
+      
+      switch(sortBy) {
+        case 'price-low':
+          return sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+        case 'price-high':
+          return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+        case 'area-low':
+          return sorted.sort((a, b) => {
+            const aSize = parseInt((a.size || '0').match(/(\d+)/)?.[1] || 0);
+            const bSize = parseInt((b.size || '0').match(/(\d+)/)?.[1] || 0);
+            return aSize - bSize;
+          });
+        case 'area-high':
+          return sorted.sort((a, b) => {
+            const aSize = parseInt((a.size || '0').match(/(\d+)/)?.[1] || 0);
+            const bSize = parseInt((b.size || '0').match(/(\d+)/)?.[1] || 0);
+            return bSize - aSize;
+          });
+        case 'rating-high':
+          return sorted.sort((a, b) => (b.g_rating || 0) - (a.g_rating || 0));
+        default:
+          return sorted;
+      }
+    }
+    
+    // Update results count and active filters display
+    function updateResultsInfo() {
+      const countEl = document.getElementById('pfResultCount');
+      const filtersEl = document.getElementById('pfActiveFilters');
+      
+      countEl.textContent = `${filteredProperties.length} ${filteredProperties.length === 1 ? 'property' : 'properties'} found`;
+      
+      // No advanced filters anymore
+      filtersEl.innerHTML = '';
+    }
+    
+    // Pagination logic
+    function updatePagination() {
+      const pageSizeSelect = document.getElementById('pfPageSize').value;
+      pageSize = pageSizeSelect === 'all' ? filteredProperties.length : parseInt(pageSizeSelect);
+      
+      const totalPages = Math.ceil(filteredProperties.length / pageSize);
+      currentPage = Math.min(currentPage, totalPages || 1);
+      
+      const start = (currentPage - 1) * pageSize;
+      const end = Math.min(start + pageSize, filteredProperties.length);
+      const paginatedProps = filteredProperties.slice(start, end);
+      
+      // Update pagination UI
+      document.getElementById('btnPrevPage').disabled = currentPage === 1;
+      document.getElementById('btnNextPage').disabled = currentPage >= totalPages;
+      document.getElementById('pfPageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+      
+      // Show/hide pagination
+      const paginationEl = document.getElementById('pfPagination');
+      if (pageSizeSelect === 'all' || totalPages <= 1) {
+        paginationEl.style.display = 'none';
+      } else {
+        paginationEl.style.display = 'flex';
+      }
+      
+      return paginatedProps;
+    }
+    
+    // Render properties with save/compare buttons
+    function renderFilteredProperties() {
+      const paginatedProps = updatePagination();
+      updateResultsInfo();
+      
+      if (!paginatedProps.length) {
+        pfCardsEl().innerHTML = '<div class="text-center text-muted p-4">No properties match your filters. Try adjusting your criteria.</div>';
+        pfTableBody().innerHTML = `<tr><td colspan="7" class="text-muted text-center">No results found.</td></tr>`;
+        return;
+      }
+      
+      // Render cards
+      pfCardsEl().innerHTML = paginatedProps.map((p, i) => {
+        const title = escapeHTML(p.project_name || `Project ${i+1}`);
+        const area = escapeHTML(p.area||"-");
+        const apt = escapeHTML(p.apartment_type||"-");
+        const size = escapeHTML(p.size||"-");
+        const notes = escapeHTML(p.notes||"");
+        const gRating = (typeof p.g_rating==='number') ? `<span class="rating"><span class="star">★</span>${p.g_rating.toFixed(1)}</span>` : '';
+        const isSaved = savedProperties.has(p.project_name);
+        const isInCompare = compareList.some(cp => cp.project_name === p.project_name);
+        
+        const sourceInfo = p.source_url ? `
+          <div class="mt-2 pt-2" style="border-top: 1px solid #e7eef5;">
+            <div style="margin-bottom: 6px;">
+              <span style="font-size:10px; color:#677084;">
+                📌 Source: ${escapeHTML(p.source_name || 'Property Portal')}
+                ${p.last_updated ? ` • ${escapeHTML(p.last_updated)}` : ''}
+              </span>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <a href="${escapeHTML(p.source_url)}" target="_blank" rel="noopener" style="font-size:10px; color:#1e40af; word-break:break-all; text-decoration:none; display:block; padding:4px 0;">
+                🔗 View Listing
+              </a>
+            </div>
+          </div>
+        ` : '';
+        
+        return `
+          <div class="prop-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="prop-title">${title}</div>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm ${isSaved ? 'btn-danger' : 'btn-outline-secondary'}" onclick="toggleSave('${escapeHTML(p.project_name)}')" title="${isSaved ? 'Remove from saved' : 'Save property'}">
+                  ${isSaved ? '❤️' : '🤍'}
+                </button>
+                <button class="btn btn-sm ${isInCompare ? 'btn-warning' : 'btn-outline-secondary'}" onclick="toggleCompare('${escapeHTML(p.project_name)}')" title="${isInCompare ? 'Remove from comparison' : 'Add to comparison'}" ${compareList.length >= 4 && !isInCompare ? 'disabled' : ''}>
+                  ${isInCompare ? '✓' : '⊕'}
+                </button>
+              </div>
+            </div>
+            <div class="text-muted small mb-1">${area} • ${apt} • ${size || '—'}</div>
+            ${p.price_band ? `<div class="text-primary fw-bold small mb-1">${escapeHTML(p.price_band)} <span style="font-size:9px;color:#677084;font-weight:normal;" title="Price estimated from ${p.source_name || 'AI analysis'}">(est.)</span></div>` : ''}
+            ${gRating ? `<div class="text-muted small mb-1">${gRating}</div>` : ''}
+            <div class="mt-2 small text-muted">${notes}</div>
+            ${sourceInfo}
+          </div>`;
+      }).join("");
+      
+      // Render table
+      pfTableBody().innerHTML = paginatedProps.map((p, i) => {
+        const idx = (currentPage - 1) * pageSize + i + 1;
+        const title = escapeHTML(p.project_name || `Project ${idx}`);
+        const area = escapeHTML(p.area||"-");
+        const apt = escapeHTML(p.apartment_type||"-");
+        const size = escapeHTML(p.size||"-");
+        const rating = (typeof p.g_rating==='number') ? p.g_rating.toFixed(1) : "";
+        const sourceUrl = p.source_url ? `
+          <a href="${escapeHTML(p.source_url)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" style="font-size:10px">View</a>
+        ` : '-';
+        return `<tr>
+          <td>${idx}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${size}</td><td>${rating}</td><td>${sourceUrl}</td>
+        </tr>`;
+      }).join("");
+    }
+    
+    // Save/unsave property
+    window.toggleSave = function(projectName) {
+      if (savedProperties.has(projectName)) {
+        savedProperties.delete(projectName);
+      } else {
+        savedProperties.add(projectName);
+      }
+      renderFilteredProperties();
+    };
+    
+    // Add/remove from comparison
+    window.toggleCompare = function(projectName) {
+      const idx = compareList.findIndex(p => p.project_name === projectName);
+      if (idx >= 0) {
+        compareList.splice(idx, 1);
+      } else {
+        if (compareList.length < 4) {
+          const prop = filteredProperties.find(p => p.project_name === projectName);
+          if (prop) compareList.push(prop);
+        }
+      }
+      renderFilteredProperties();
+      updateComparePanel();
+    };
+    
+    // Update comparison panel
+    function updateComparePanel() {
+      // You can add a floating comparison panel here
+      console.log('Compare list:', compareList);
+    }
+    
+    // Event listeners for filters and sorting
+    document.getElementById('pfSortBy').addEventListener('change', (e) => {
+      filteredProperties = sortProperties(filteredProperties, e.target.value);
+      currentPage = 1;
+      renderFilteredProperties();
+    });
+    
+    document.getElementById('pfPageSize').addEventListener('change', () => {
+      currentPage = 1;
+      renderFilteredProperties();
+    });
+    
+    document.getElementById('btnPrevPage').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderFilteredProperties();
+        pfCardsEl().scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+    
+    document.getElementById('btnNextPage').addEventListener('click', () => {
+      const totalPages = Math.ceil(filteredProperties.length / pageSize);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderFilteredProperties();
+        pfCardsEl().scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+    
+    // ======================= POI PRIORITY MANAGEMENT =======================
 
     // ======================= MAPS: PROPERTY & RETAIL =======================
     let map1=null,map2=null, marker1=null,marker2=null, circle2=null;
