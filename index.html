@@ -460,19 +460,20 @@
                   <input id="pfFloor" class="form-control" placeholder="e.g., 1st, 2-4, Ground (optional)">
                 </div>
                 <div class="col-6">
-                  <label class="form-label">Budget (in Lacs)</label>
-                  <div class="row g-2">
-                    <div class="col-6">
-                      <input id="pfBudgetMin" type="number" class="form-control" placeholder="Min (e.g., 30)">
-                    </div>
-                    <div class="col-6">
-                      <input id="pfBudgetMax" type="number" class="form-control" placeholder="Max (e.g., 35)">
-                    </div>
-                  </div>
+                  <label class="form-label" id="pfBudgetLabel">Budget Range</label>
+                  <select id="pfBudgetRange" class="form-select">
+                    <option value="">Select Budget Range (Optional)</option>
+                    <!-- Options will be populated based on currency -->
+                    <option value="30-50">30 - 50 Lacs</option>
+                    <option value="50-70">50 - 70 Lacs</option>
+                    <option value="70-90">70 - 90 Lacs</option>
+                    <option value="90-120">90 - 120 Lacs</option>
+                    <option value="120-150">120 - 150 Lacs</option>
+                  </select>
                 </div>
                 <div class="col-12">
                   <label class="form-label">Currency</label>
-                  <select id="pfCurrency" class="form-select">
+                  <select id="pfCurrency" class="form-select" onchange="updateBudgetLabel()">
                     <option value="INR" selected>INR (India)</option>
                     <option value="AED">AED (UAE)</option>
                     <option value="USD">USD (US)</option>
@@ -542,14 +543,6 @@
                 <strong>💡 Price Disclaimer:</strong> All prices are AI-generated estimates based on market data. Verify actual prices on official property portals.
               </div>
               
-              <div class="form-help">Each project name is normalized to match its <b>Google Maps place name</b> when possible.</div>
-              
-              <!-- Data Sources Section -->
-              <div id="pfSources" class="alert alert-light mt-2 mb-0" style="display:none; font-size: 12px; padding: 10px; border-left: 4px solid #3b82f6;">
-                <div class="fw-bold mb-1">📊 Data Sources Used:</div>
-                <div id="pfSourcesList" class="small text-muted"></div>
-              </div>
-              
               <div id="pfSummary" class="mt-3 mono prewrap text-muted">—</div>
 
               <div id="pfCards" class="finder-cards mt-2"></div>
@@ -565,10 +558,10 @@
                 <table class="table table-sm table-hover">
                   <thead class="table-light">
                     <tr>
-                      <th>#</th><th>Project (Exact Map Name)</th><th>Area</th><th>Type</th><th>Floor</th><th>Size (Carpet/Built-up)</th><th>Price</th><th>Agent Phone</th><th>Source URL</th>
+                      <th>#</th><th>Project (Exact Map Name)</th><th>Area</th><th>Type</th><th>Floor</th><th>Size</th><th>Price</th><th>Source URL</th>
                     </tr>
                   </thead>
-                  <tbody id="pfTableBody"><tr><td colspan="9" class="text-muted">Run a search to populate results.</td></tr></tbody>
+                  <tbody id="pfTableBody"><tr><td colspan="8" class="text-muted">Run a search to populate results.</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -977,6 +970,52 @@ def decrypt_key(encrypted_data, passphrase="default_salt_2024"):
     function pfCurrencySymbol(c){ return ({"INR":"₹","AED":"AED ","USD":"$","SGD":"S$","GBP":"£"})[c] || ""; }
     function fmtMoney(n, cur){ if(n==null || isNaN(n)) return "-"; const sym = pfCurrencySymbol(cur); return sym + Math.round(Number(n)).toLocaleString(); }
     function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    
+    // Get budget unit based on currency (lacs for India, million for others)
+    function getBudgetUnit(currency) {
+      return currency === 'INR' ? 'Lacs' : 'Million';
+    }
+    
+    // Update budget dropdown options based on selected currency
+    function updateBudgetLabel() {
+      const currency = document.getElementById('pfCurrency').value;
+      const budgetSelect = document.getElementById('pfBudgetRange');
+      const unit = getBudgetUnit(currency);
+      
+      document.getElementById('pfBudgetLabel').textContent = `Budget Range`;
+      
+      // Define bucket ranges for each currency
+      let buckets = [];
+      if (currency === 'INR') {
+        buckets = [
+          { value: '30-50', label: '30 - 50 Lacs' },
+          { value: '50-70', label: '50 - 70 Lacs' },
+          { value: '70-90', label: '70 - 90 Lacs' },
+          { value: '90-120', label: '90 - 120 Lacs' },
+          { value: '120-150', label: '120 - 150 Lacs' }
+        ];
+      } else if (currency === 'AED') {
+        buckets = [
+          { value: '1-2', label: '1 - 2 Million AED' },
+          { value: '2-3', label: '2 - 3 Million AED' },
+          { value: '3-4', label: '3 - 4 Million AED' },
+          { value: '4-5', label: '4 - 5 Million AED' },
+          { value: '5-7', label: '5 - 7 Million AED' }
+        ];
+      } else if (currency === 'USD') {
+        buckets = [
+          { value: '0.3-0.5', label: '$0.3 - $0.5 Million' },
+          { value: '0.5-0.8', label: '$0.5 - $0.8 Million' },
+          { value: '0.8-1.2', label: '$0.8 - $1.2 Million' },
+          { value: '1.2-1.8', label: '$1.2 - $1.8 Million' },
+          { value: '1.8-2.5', label: '$1.8 - $2.5 Million' }
+        ];
+      }
+      
+      // Update dropdown options
+      budgetSelect.innerHTML = '<option value="">Select Budget Range (Optional)</option>' +
+        buckets.map(b => `<option value="${b.value}">${b.label}</option>`).join('');
+    }
 
     // Attempt to query real estate portals for actual property listings
     async function queryRealEstatePortals(city, type, locality, sourcesUsed) {
@@ -1408,12 +1447,11 @@ VERIFICATION CHECKLIST:\n\
 Location: ${payload.city}, ${payload.country}\n\
 Property Type: ${payload.propertyType === 'commercial' ? 'COMMERCIAL office buildings, business centers, retail spaces, and commercial complexes' : 'RESIDENTIAL apartment complexes, housing societies, and residential towers'}\n\
 Configuration: ${payload.type} ${payload.propertyType === 'commercial' ? 'office/retail space' : 'apartments'}\n\
-Preferred Locality: ${payload.locality || "(Any)"}\n\
-${payload.size ? `Size: ${payload.size} ${payload.sizeUnit} (${payload.sizeType})\n` : ''}\
-${payload.floorPref ? `Floor Preference: ${payload.floorPref}\n` : ''}\
-${payload.budgetMin || payload.budgetMax ? `Budget Range: ${payload.budgetMin ? payload.budgetMin + 'L' : ''}${payload.budgetMin && payload.budgetMax ? '-' : ''}${payload.budgetMax ? payload.budgetMax + 'L' : ''} ${payload.currency}\n` : ''}\
-${payload.prefLoc1 || payload.prefLoc2 || payload.prefLoc3 ? `Preferred Localities: ${[payload.prefLoc1, payload.prefLoc2, payload.prefLoc3].filter(Boolean).join(', ')}\n` : ''}\
-${payload.otherCriteria ? `Other Criteria: ${payload.otherCriteria}\n` : ''}\
+${payload.prefLoc1 || payload.prefLoc2 || payload.prefLoc3 ? `\n🎯 PREFERRED LOCALITIES (MANDATORY - Search ONLY in these areas):\n${[payload.prefLoc1, payload.prefLoc2, payload.prefLoc3].filter(Boolean).map((loc, i) => `  ${i+1}. ${loc}`).join('\n')}\n` : payload.locality ? `Preferred Locality: ${payload.locality}\n` : ''}\
+${payload.size ? `\n📐 SIZE REQUIREMENT (CRITICAL):\n  - Target: ${payload.size} ${payload.sizeUnit} ${payload.sizeType}\n  - Acceptable range: ${Math.round(payload.size * 0.9)}-${Math.round(payload.size * 1.1)} ${payload.sizeUnit}\n  - Type: ${payload.sizeType === 'carpet' ? 'Carpet Area' : payload.sizeType === 'builtup' ? 'Built-up Area' : 'Super Built-up Area'}\n` : ''}\
+${payload.floorPref ? `\n🏢 FLOOR REQUIREMENT (STRICT):\n  - Floor: ${payload.floorPref}\n  - Must match this floor specification\n  - ${payload.floorPref.toLowerCase().includes('ground') || payload.floorPref.includes('0') ? 'Ground floor preferred' : payload.floorPref.toLowerCase().includes('1st') || payload.floorPref.includes('1') ? 'First floor preferred - suitable for senior citizens/families' : 'Higher floor as specified'}\n` : ''}\
+${payload.budgetMin || payload.budgetMax ? `\n💰 BUDGET (MANDATORY - Do NOT exceed):\n  - Budget Range: ${payload.budgetMin ? payload.budgetMin + ' ' + getBudgetUnit(payload.currency) : 'No min'}${payload.budgetMin && payload.budgetMax ? ' - ' : payload.budgetMax ? 'Up to ' : ''}${payload.budgetMax ? payload.budgetMax + ' ' + getBudgetUnit(payload.currency) : ''} ${payload.currency}\n  - ${payload.currency === 'INR' ? 'In Indian Rupees (₹)' : payload.currency === 'AED' ? 'In UAE Dirhams (AED)' : 'In ' + payload.currency}\n  - ${payload.budgetMin && payload.budgetMax ? `STRICT RANGE: ${payload.budgetMin} to ${payload.budgetMax} ${getBudgetUnit(payload.currency)} only` : payload.budgetMax ? `Maximum budget: ${payload.budgetMax} ${getBudgetUnit(payload.currency)} (do not exceed)` : `Minimum budget: ${payload.budgetMin} ${getBudgetUnit(payload.currency)}`}\n  - Include all costs: registration, fees, etc.\n` : ''}\
+${payload.otherCriteria ? `\n📝 ADDITIONAL REQUIREMENTS:\n  ${payload.otherCriteria}\n` : ''}\
 \n\
 SEARCH INSTRUCTIONS:\n\
 ${payload.country === 'India' ? 
@@ -1431,34 +1469,54 @@ payload.country === 'UAE' ?
 • Include properties from reputable real estate agencies\n\
 • Verify pricing in local currency with market comparisons'}\n\
 \n\
+⚠️ CRITICAL MATCHING REQUIREMENTS:\n\
+${payload.size ? `✓ SIZE: Properties MUST be within ${Math.round(payload.size * 0.9)}-${Math.round(payload.size * 1.1)} ${payload.sizeUnit} (${payload.sizeType})\n` : ''}\
+${payload.floorPref ? `✓ FLOOR: Properties MUST be on ${payload.floorPref} - NO OTHER FLOORS\n` : ''}\
+${payload.budgetMin || payload.budgetMax ? `✓ BUDGET: Properties MUST be within ${payload.budgetMin || 0}L-${payload.budgetMax || '∞'}L ${payload.currency} range\n` : ''}\
+${payload.prefLoc1 || payload.prefLoc2 || payload.prefLoc3 ? `✓ LOCATION: Properties MUST be in one of these localities: ${[payload.prefLoc1, payload.prefLoc2, payload.prefLoc3].filter(Boolean).join(', ')}\n` : ''}\
+\n\
 REQUIREMENTS:\n\
-✓ Return 8-14 REAL properties with verified source URLs\n\
+✓ Return 5-8 REAL properties with verified source URLs\n\
+✓ Each property MUST match ALL specified criteria above\n\
 ✓ Each property must include the exact listing URL from the source portal\n\
 ✓ Only include ${payload.propertyType === 'commercial' ? 'COMMERCIAL properties (NO residential)' : `${payload.type} RESIDENTIAL apartments (NO independent houses, villas, or commercial buildings)`}\n\
-✓ Prioritize properties with:\n\
+✓ Properties must have:\n\
   - Active listings (2024-2025)\n\
   - Verified builder/developer credentials\n\
-  - Good connectivity and amenities\n\
-  - Competitive pricing for the locality\n\
-${payload.size ? `  - Size around ${payload.size} ${payload.sizeUnit} (${payload.sizeType})\n` : ''}\
-${payload.floorPref ? `  - Floor: ${payload.floorPref}\n` : ''}\
-${payload.budgetMin || payload.budgetMax ? `  - Budget within specified range\n` : ''}\
-${payload.otherCriteria ? `  - ${payload.otherCriteria}\n` : ''}\
+  - Agent/broker phone numbers (if available)\n\
+  - Exact floor number matching requirement\n\
+  - Both built-up and carpet area clearly mentioned\n\
+  - Direct listing/uploadable link\n\
+${payload.otherCriteria ? `  - Match additional criteria: ${payload.otherCriteria}\n` : ''}\
 \n\
-For each property found, extract and include:\n\
-- Agent/broker phone numbers\n\
-- Exact floor number\n\
-- Both built-up and carpet area (if available)\n\
-- Direct listing/uploadable link\n\
+📋 OUTPUT FORMAT:\n\
+Present each property with:\n\
+- Project name and exact location\n\
+- Floor number (must match ${payload.floorPref || 'any floor'})\n\
+- Carpet area AND Built-up area\n\
+- Price in ${payload.currency} (within ${payload.budgetMin || 0}L-${payload.budgetMax || '∞'}L)\n\
+- Agent phone number\n\
+- Direct source URL\n\
+- Brief notes on connectivity, amenities, facing direction\n\
 \n\
-Present results in a clear, structured format that can be converted to a table.\n\
-\n\
-Size in sqft. Include diverse options across different price ranges and localities within ${payload.city}.` }
+Return ONLY properties that strictly match the size, floor, budget, and location requirements specified above.` }
       ];
     }
 
     // Heuristic fallback (16 candidates)
-    function localHeuristicFinder({country, city, type, locality, propertyType}){
+    function localHeuristicFinder(payload){
+      const {country, city, type, locality, propertyType, budgetMin, budgetMax} = payload;
+      const payloadCurrency = payload.currency; // Get currency from payload
+      
+      // Calculate budget range in rupees
+      let userBudgetMinRupees = null;
+      let userBudgetMaxRupees = null;
+      if (budgetMin || budgetMax) {
+        const multiplier = payloadCurrency === 'INR' ? 100000 : 1000000;
+        userBudgetMinRupees = budgetMin ? parseFloat(budgetMin) * multiplier : null;
+        userBudgetMaxRupees = budgetMax ? parseFloat(budgetMax) * multiplier : null;
+      }
+      
       // Separate area pools for residential vs commercial properties
       // Expanded area pools to ensure variety across BHK types
       const residentialAreasByCity = {
@@ -1506,7 +1564,23 @@ Size in sqft. Include diverse options across different price ranges and localiti
       const currency = key === "kolkata" ? "INR" : key === "dubai" ? "AED" : "SGD";
       const priceRange = marketPrices[key] || marketPrices["kolkata"];
       const typeRange = priceRange[type] || priceRange["2 BHK"];
-      const [minPrice, maxPrice] = typeRange;
+      let [minPrice, maxPrice] = typeRange;
+      
+      // Override with user's budget if specified
+      if (userBudgetMinRupees !== null || userBudgetMaxRupees !== null) {
+        if (userBudgetMinRupees !== null) {
+          minPrice = Math.max(minPrice, userBudgetMinRupees);
+        }
+        if (userBudgetMaxRupees !== null) {
+          maxPrice = Math.min(maxPrice, userBudgetMaxRupees);
+        }
+        // Ensure min is not greater than max
+        if (minPrice > maxPrice) {
+          // If user budget is outside typical range, use their budget
+          minPrice = userBudgetMinRupees || minPrice;
+          maxPrice = userBudgetMaxRupees || maxPrice;
+        }
+      }
       
       for(let i=0;i<Math.min(16,pool.length);i++){
         const variation = 0.8 + (i * 0.025); // Price variation across areas
@@ -1643,9 +1717,46 @@ Size in sqft. Include diverse options across different price ranges and localiti
       const LOC_RADIUS_M     = opts.locRadiusM    ?? 2000; // ***** 2 km default *****
       const requireGeometry  = !!opts.requireGeometry;
       const hasLocality = !!localityPoint;
+      
+      // Budget filtering
+      const budgetMin = (payload.budgetMin && payload.budgetMin.trim()) ? parseFloat(payload.budgetMin) : null;
+      const budgetMax = (payload.budgetMax && payload.budgetMax.trim()) ? parseFloat(payload.budgetMax) : null;
+      const currency = payload.currency || 'INR';
+      
+      // Convert budget to rupees based on currency and unit (lacs/million)
+      let budgetMinRupees = null;
+      let budgetMaxRupees = null;
+      
+      if (budgetMin !== null || budgetMax !== null) {
+        // Determine multiplier based on currency
+        // INR uses Lacs (1 Lac = 100,000), others use Million
+        const multiplier = currency === 'INR' ? 100000 : 1000000;
+        
+        if (budgetMin !== null) {
+          budgetMinRupees = budgetMin * multiplier;
+        }
+        if (budgetMax !== null) {
+          budgetMaxRupees = budgetMax * multiplier;
+        }
+        
+        console.log('Budget filter:', {budgetMin, budgetMax, budgetMinRupees, budgetMaxRupees, currency});
+      }
 
       return (picks || []).filter(p=>{
         if (TYPE && p.apartment_type && p.apartment_type !== TYPE) return false;
+
+        // Budget filter - check if property price falls within budget range
+        // Only apply if budget is specified
+        if (budgetMinRupees !== null || budgetMaxRupees !== null) {
+          const propertyPrice = p.price ? parseFloat(p.price) : null;
+          
+          // If property has a price, check if it's within budget
+          if (propertyPrice !== null && !isNaN(propertyPrice)) {
+            if (budgetMinRupees !== null && propertyPrice < budgetMinRupees) return false;
+            if (budgetMaxRupees !== null && propertyPrice > budgetMaxRupees) return false;
+          }
+          // If property has no price, allow it through (we can't filter what we don't know)
+        }
 
         if (hasLocality){
           if (typeof p.lat === 'number' && typeof p.lng === 'number'){
@@ -1811,11 +1922,8 @@ Size in sqft. Include diverse options across different price ranges and localiti
         const area = escapeHTML(p.area||"-");
         const apt = escapeHTML(p.apartment_type||"-");
         const floor = p.floor ? ` • Floor: ${escapeHTML(p.floor)}` : '';
-        const carpetArea = p.carpet_area || "";
-        const builtupArea = p.builtup_area || p.size || "";
-        const sizeDisplay = carpetArea && builtupArea ? `${carpetArea} (carpet) / ${builtupArea} (built-up)` : (builtupArea || "-");
+        const size = escapeHTML(p.carpet_area||p.builtup_area||p.size||"-");
         const price = p.price_band || (p.price ? `${p.price}` : "");
-        const agentPhone = p.agent_phone ? `<div class="small text-muted">📞 ${escapeHTML(p.agent_phone)}</div>` : '';
         const notes = escapeHTML(p.notes||"");
         const gRating = (typeof p.g_rating==='number') ? `<span class="rating"><span class="star">★</span>${p.g_rating.toFixed(1)}</span>` : '';
         const sourceInfo = p.source_url ? `
@@ -1837,9 +1945,8 @@ Size in sqft. Include diverse options across different price ranges and localiti
           <div class="prop-card">
             <div class="prop-title">${title}</div>
             <div class="text-muted small mb-1">${area} • ${apt}${floor}</div>
-            <div class="text-muted small mb-1">📐 Size: ${sizeDisplay}</div>
+            <div class="text-muted small mb-1">📐 Size: ${size}</div>
             ${price ? `<div class="text-muted small mb-1">💰 Price: ${price}</div>` : ''}
-            ${agentPhone}
             ${gRating ? `<div class="text-muted small mb-1">${gRating}</div>` : ''}
             <div class="mt-2 small text-muted">${notes}</div>
             ${sourceInfo}
@@ -1847,18 +1954,15 @@ Size in sqft. Include diverse options across different price ranges and localiti
       }).join("");
 
       if(!picks.length){
-        pfTableBody().innerHTML = `<tr><td colspan="9" class="text-muted">No results returned. Try adjusting inputs.</td></tr>`;
+        pfTableBody().innerHTML = `<tr><td colspan="8" class="text-muted">No results returned. Try adjusting inputs.</td></tr>`;
       } else {
         pfTableBody().innerHTML = picks.map((p,i)=>{
           const title = escapeHTML(p.project_name || `Project ${i+1}`);
           const area = escapeHTML(p.area||"-");
           const apt = escapeHTML(p.apartment_type||"-");
           const floor = escapeHTML(p.floor||"-");
-          const carpetArea = p.carpet_area || "-";
-          const builtupArea = p.builtup_area || p.size || "-";
-          const sizeDisplay = `${carpetArea} / ${builtupArea}`;
+          const size = escapeHTML(p.carpet_area||p.builtup_area||p.size||"-");
           const price = p.price_band || (p.price ? `${p.price}` : "-");
-          const agentPhone = escapeHTML(p.agent_phone || "-");
           const sourceUrl = p.source_url ? `
             <div style="display:flex; flex-direction:column; gap:4px;">
               <span style="font-size:9px; color:#677084; font-weight:600;">${escapeHTML(p.source_name || 'Property Portal')}</span>
@@ -1870,7 +1974,7 @@ Size in sqft. Include diverse options across different price ranges and localiti
             </div>
           ` : '-';
           return `<tr>
-            <td>${i+1}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${floor}</td><td style="font-size:10px;">${sizeDisplay}</td><td>${price}</td><td>${agentPhone}</td><td>${sourceUrl}</td>
+            <td>${i+1}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${floor}</td><td style="font-size:10px;">${size}</td><td>${price}</td><td>${sourceUrl}</td>
           </tr>`;
         }).join("");
         pfBtnCSV().disabled=false; pfBtnXLSX().disabled=false; pfBtnCopyNames().disabled=false;
@@ -1889,8 +1993,17 @@ Size in sqft. Include diverse options across different price ranges and localiti
       const sizeUnit = document.getElementById('pfSizeUnit').value;
       const sizeType = document.getElementById('pfSizeType').value;
       const floorPref = document.getElementById('pfFloor').value.trim();
-      const budgetMin = document.getElementById('pfBudgetMin').value.trim();
-      const budgetMax = document.getElementById('pfBudgetMax').value.trim();
+      
+      // Parse budget range from dropdown
+      const budgetRangeValue = document.getElementById('pfBudgetRange').value.trim();
+      let budgetMin = '';
+      let budgetMax = '';
+      if (budgetRangeValue) {
+        const parts = budgetRangeValue.split('-');
+        budgetMin = parts[0] || '';
+        budgetMax = parts[1] || '';
+      }
+      
       const currency = document.getElementById('pfCurrency').value;
       const prefLoc1 = document.getElementById('pfPrefLoc1').value.trim();
       const prefLoc2 = document.getElementById('pfPrefLoc2').value.trim();
@@ -1924,9 +2037,8 @@ Size in sqft. Include diverse options across different price ranges and localiti
 
       pfSummaryEl().textContent = "Working… generating project suggestions…";
       pfCardsEl().innerHTML = "";
-      pfTableBody().innerHTML = `<tr><td colspan="9" class="text-muted">Working...</td></tr>`;
+      pfTableBody().innerHTML = `<tr><td colspan="8" class="text-muted">Working...</td></tr>`;
       pfBtnCSV().disabled = true; pfBtnXLSX().disabled = true; pfBtnCopyNames().disabled = true;
-      document.getElementById('pfSources').style.display = 'none';
 
       let parsed = null;
       let picks = [];
@@ -2023,9 +2135,12 @@ Size in sqft. Include diverse options across different price ranges and localiti
             propertyType: payload.propertyType
           });
 
+          // Apply budget filter to harvested properties
+          const budgetFilteredHarvested = applyFinderFilters(payload, harvested, null, {locRadiusM: Infinity, requireGeometry: false});
+
           // Merge-dedupe by name (case-insensitive)
           const existingNames = new Set(picks.map(p=>(p.project_name||"").toLowerCase().trim()));
-          for(const h of harvested){
+          for(const h of budgetFilteredHarvested){
             const key = (h.project_name||"").toLowerCase().trim();
             if(!existingNames.has(key)){
               picks.push(h);
@@ -2061,14 +2176,6 @@ Size in sqft. Include diverse options across different price ranges and localiti
         `• Search completed for ${payload.type} properties in ${payload.city}\n` +
         `• Found ${picks.length} matching projects with various price ranges`;
 
-      // Display sources used
-      if(sourcesUsed.length > 0){
-        const sourcesEl = document.getElementById('pfSources');
-        const sourcesListEl = document.getElementById('pfSourcesList');
-        sourcesListEl.innerHTML = sourcesUsed.map((s, i) => `<div class="mb-1">${i+1}. ${s}</div>`).join('');
-        sourcesEl.style.display = 'block';
-      }
-
       pfSummaryEl().textContent = finalSummary;
       renderFilteredProperties();
       pfBtnCSV().disabled=false; pfBtnXLSX().disabled=false; pfBtnCopyNames().disabled=false;
@@ -2103,6 +2210,9 @@ Size in sqft. Include diverse options across different price ranges and localiti
     // Initialize with residential options
     updatePropertyTypeOptions();
     
+    // Initialize budget label based on default currency
+    updateBudgetLabel();
+    
     // Character counter for other criteria field
     const otherCriteriaField = document.getElementById('pfOtherCriteria');
     const charCountDisplay = document.getElementById('criteriaCharCount');
@@ -2121,6 +2231,7 @@ Size in sqft. Include diverse options across different price ranges and localiti
       } else {
         currencySelect.value = 'USD';
       }
+      updateBudgetLabel(); // Update label when currency changes
     });
     
     document.getElementById('btnFindProperties').addEventListener('click', runPropertyFinder);
@@ -2130,8 +2241,7 @@ Size in sqft. Include diverse options across different price ranges and localiti
       document.getElementById('pfCity').value="";
       document.getElementById('pfSize').value="";
       document.getElementById('pfFloor').value="";
-      document.getElementById('pfBudgetMin').value="";
-      document.getElementById('pfBudgetMax').value="";
+      document.getElementById('pfBudgetRange').value="";
       document.getElementById('pfPrefLoc1').value="";
       document.getElementById('pfPrefLoc2').value="";
       document.getElementById('pfPrefLoc3').value="";
@@ -2141,9 +2251,8 @@ Size in sqft. Include diverse options across different price ranges and localiti
       updatePropertyTypeOptions();
       pfSummaryEl().textContent="—";
       pfCardsEl().innerHTML="";
-      pfTableBody().innerHTML=`<tr><td colspan="9" class="text-muted">Run a search to populate results.</td></tr>`;
+      pfTableBody().innerHTML=`<tr><td colspan="8" class="text-muted">Run a search to populate results.</td></tr>`;
       document.getElementById('pfError').classList.add('d-none');
-      document.getElementById('pfSources').style.display = 'none';
       pfResults = [];
       pfBtnCSV().disabled = true; pfBtnXLSX().disabled = true; pfBtnCopyNames().disabled = true;
     };
@@ -2165,30 +2274,30 @@ Size in sqft. Include diverse options across different price ranges and localiti
     }
     document.getElementById('btnPFExportCSV').addEventListener('click', ()=>{
       if(!pfResults.length) return;
-      const header = ["Project (Exact Map Name)","Area","Type","Floor","Carpet Area","Built-up Area","Price","Agent Phone","Source URL"];
+      const header = ["Project (Exact Map Name)","Area","Type","Floor","Size","Price","Source URL"];
       const rows = pfResults.map(p=>[
         p.project_name||"", p.area||"", p.apartment_type||"", p.floor||"",
-        p.carpet_area||"", p.builtup_area||p.size||"", p.price_band||p.price||"",
-        p.agent_phone||"", p.source_url||""
+        p.carpet_area||p.builtup_area||p.size||"", p.price_band||p.price||"",
+        p.source_url||""
       ]);
       const csv = [header.join(",")].concat(rows.map(r=>r.map(csvCell).join(","))).join("\n");
       const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-      downloadBlob(`project_finder_${Date.now()}.csv`, blob);
+      downloadBlob(`property_finder_${Date.now()}.csv`, blob);
     });
     document.getElementById('btnPFExportXLSX').addEventListener('click', ()=>{
       if(!pfResults.length) return;
-      const data = [["Project (Exact Map Name)","Area","Type","Floor","Carpet Area","Built-up Area","Price","Agent Phone","Source URL"]]
+      const data = [["Project (Exact Map Name)","Area","Type","Floor","Size","Price","Source URL"]]
         .concat(pfResults.map(p=>[
           p.project_name||"", p.area||"", p.apartment_type||"", p.floor||"",
-          p.carpet_area||"", p.builtup_area||p.size||"", p.price_band||p.price||"",
-          p.agent_phone||"", p.source_url||""
+          p.carpet_area||p.builtup_area||p.size||"", p.price_band||p.price||"",
+          p.source_url||""
         ]));
       const ws = XLSX.utils.aoa_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Projects");
       const ab = XLSX.write(wb, {bookType:'xlsx', type:'array'});
       const blob = new Blob([ab], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-      downloadBlob(`project_finder_${Date.now()}.xlsx`, blob);
+      downloadBlob(`property_finder_${Date.now()}.xlsx`, blob);
     });
 
     // ======================= ADVANCED FILTERING & SORTING =======================
@@ -2280,7 +2389,7 @@ Size in sqft. Include diverse options across different price ranges and localiti
       
       if (!paginatedProps.length) {
         pfCardsEl().innerHTML = '<div class="text-center text-muted p-4">No properties match your filters. Try adjusting your criteria.</div>';
-        pfTableBody().innerHTML = `<tr><td colspan="7" class="text-muted text-center">No results found.</td></tr>`;
+        pfTableBody().innerHTML = `<tr><td colspan="8" class="text-muted text-center">No results found.</td></tr>`;
         return;
       }
       
@@ -2338,13 +2447,14 @@ Size in sqft. Include diverse options across different price ranges and localiti
         const title = escapeHTML(p.project_name || `Project ${idx}`);
         const area = escapeHTML(p.area||"-");
         const apt = escapeHTML(p.apartment_type||"-");
-        const size = escapeHTML(p.size||"-");
-        const rating = (typeof p.g_rating==='number') ? p.g_rating.toFixed(1) : "";
+        const floor = escapeHTML(p.floor||"-");
+        const size = escapeHTML(p.carpet_area||p.builtup_area||p.size||"-");
+        const price = escapeHTML(p.price_band||p.price||"-");
         const sourceUrl = p.source_url ? `
           <a href="${escapeHTML(p.source_url)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" style="font-size:10px">View</a>
         ` : '-';
         return `<tr>
-          <td>${idx}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${size}</td><td>${rating}</td><td>${sourceUrl}</td>
+          <td>${idx}</td><td>${title}</td><td>${area}</td><td>${apt}</td><td>${floor}</td><td>${size}</td><td>${price}</td><td>${sourceUrl}</td>
         </tr>`;
       }).join("");
     }
