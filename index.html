@@ -1587,6 +1587,7 @@ Return ONLY properties that strictly match the size, floor, budget, and location
       };
       // Use currency from payload (based on country selection) instead of deriving from city
       const currency = payloadCurrency || 'INR';
+      console.log('[Heuristic] City:', city, 'payloadCurrency:', payloadCurrency, 'currency:', currency);
       const priceRange = marketPrices[key] || marketPrices["kolkata"];
       const typeRange = priceRange[type] || priceRange["2 BHK"];
       let [minPrice, maxPrice] = typeRange;
@@ -1813,7 +1814,7 @@ Return ONLY properties that strictly match the size, floor, budget, and location
     }
 
     // --- NEW: Harvest nearby properties within 5 km if not enough results
-    async function harvestNearbyProjects({ localityPoint, city, type, needCount, propertyType }){
+    async function harvestNearbyProjects({ localityPoint, city, type, needCount, propertyType, currency }){
       if(!window.google || !google.maps?.places || !localityPoint || !needCount) return [];
       const service = new google.maps.places.PlacesService(document.createElement('div'));
       const center = new google.maps.LatLng(localityPoint.lat, localityPoint.lng);
@@ -1900,7 +1901,8 @@ Return ONLY properties that strictly match the size, floor, budget, and location
           "singapore": {"1 BHK": [850000, 1700000], "2 BHK": [1300000, 2600000], "3 BHK": [1950000, 3900000]}
         };
         const cityKey = (city || "").toLowerCase().trim();
-        const currency = cityKey === "kolkata" ? "INR" : cityKey === "dubai" ? "AED" : "SGD";
+        // Use currency from payload instead of city-based detection
+        const currencyToUse = currency || 'INR';
         const priceRange = marketPrices[cityKey] || marketPrices["kolkata"];
         const typeRange = priceRange[type] || priceRange["2 BHK"];
         const [minPrice, maxPrice] = typeRange;
@@ -1915,7 +1917,7 @@ Return ONLY properties that strictly match the size, floor, budget, and location
           apartment_type: type,
           size: "", // unknown from Places
           price: approxPrice,
-          price_band: `${fmtMoney(low, currency)}–${fmtMoney(high, currency)}`,
+          price_band: `${fmtMoney(low, currencyToUse)}–${fmtMoney(high, currencyToUse)}`,
           pros: ["Exact Maps match","Within 2 km of chosen locality"],
           cons: ["Verify age, amenities & maintenance"],
           notes: "",
@@ -2030,6 +2032,7 @@ Return ONLY properties that strictly match the size, floor, budget, and location
       }
       
       const currency = document.getElementById('pfCurrency').value;
+      console.log('[RunFinder] Country:', country, 'City:', city, 'Currency:', currency);
       const prefLoc1 = document.getElementById('pfPrefLoc1').value.trim();
       const prefLoc2 = document.getElementById('pfPrefLoc2').value.trim();
       const prefLoc3 = document.getElementById('pfPrefLoc3').value.trim();
@@ -2157,7 +2160,8 @@ Return ONLY properties that strictly match the size, floor, budget, and location
             city,
             type,
             needCount: need,
-            propertyType: payload.propertyType
+            propertyType: payload.propertyType,
+            currency: payload.currency
           });
 
           // Apply budget filter to harvested properties
