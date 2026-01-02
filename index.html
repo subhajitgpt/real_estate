@@ -1521,12 +1521,18 @@ Return ONLY properties that strictly match the size, floor, budget, and location
       // Expanded area pools to ensure variety across BHK types
       const residentialAreasByCity = {
         "kolkata":["New Town","Salt Lake","Rajarhat","Tollygunge","Behala","Dum Dum","Ballygunge","Jadavpur","Ultadanga","Kasba","Baguiati","Garia","Narendrapur","EM Bypass","Lake Town","Barasat","Madhyamgram","Howrah","Serampore","Barrackpore","Bidhannagar","Action Area","Shapoorji","Webel"],
+        "bangalore":["Whitefield","Electronic City","Marathahalli","Koramangala","Indiranagar","HSR Layout","BTM Layout","Jayanagar","JP Nagar","Bannerghatta","Sarjapur","Bellandur","Hebbal","Yelahanka","Hennur","KR Puram","Ramamurthy Nagar","Mahadevapura","Bommanahalli","Begur","Varthur","Thanisandra","Hoodi","Kadugodi"],
+        "mumbai":["Andheri","Powai","Goregaon","Borivali","Kandivali","Malad","Bandra","Kurla","Chembur","Ghatkopar","Vikhroli","Mulund","Thane","Navi Mumbai","Kharghar","Panvel","Airoli","Vashi","Nerul","Belapur","Dahisar","Mira Road","Virar","Kalyan"],
+        "delhi":["Dwarka","Rohini","Pitampura","Janakpuri","Vasant Kunj","Saket","Greater Kailash","Defence Colony","Lajpat Nagar","Mayur Vihar","Preet Vihar","Nehru Place","Hauz Khas","Punjabi Bagh","Rajouri Garden","Paschim Vihar","Vikaspuri","Uttam Nagar","Karol Bagh","Model Town","Civil Lines","Kalkaji","Malviya Nagar","Vasundhara"],
         "dubai":["Marina","JLT","JVC","Barsha","Silicon Oasis","Mirdif","Discovery Gardens","Greens","IMPZ","Sports City","Arjan","Al Furjan","Jumeirah","Bur Dubai","Karama","Satwa","Al Qusais","Muhaisnah","Al Warqa","Al Mizhar","Nad Al Sheba","Al Khawaneej","Dubailand","Motor City"],
         "singapore":["Tampines","Jurong East","Punggol","Serangoon","Bukit Timah","Toa Payoh","Kallang","Clementi","Queenstown","Woodlands","Sengkang","Yishun","Bukit Panjang","Hougang","Pasir Ris","Bedok","Ang Mo Kio","Bishan","Jurong West","Choa Chu Kang","Sembawang","Bukit Batok"]
       };
       
       const commercialAreasByCity = {
         "kolkata":["Park Street","Esplanade","BBD Bagh","Sector V","New Town","Rajarhat","EM Bypass","Camac Street","AJC Bose Road","Kasba","Jessore Road","VIP Road","Salt Lake","Bidhannagar","Action Area","Unitech","DLF","Ecospace"],
+        "bangalore":["MG Road","Whitefield","Electronic City","Koramangala","Indiranagar","HSR Layout","Marathahalli","Outer Ring Road","Bellandur","Sarjapur Road","Hebbal","Yemalur","Manyata Tech Park","Embassy Tech Village","Prestige Tech Park","RMZ Infinity","Cessna Business Park","Bagmane Tech Park"],
+        "mumbai":["BKC","Andheri East","Lower Parel","Worli","Parel","Nariman Point","Fort","Ballard Estate","Goregaon East","Malad","Powai","Vikhroli","Thane","Navi Mumbai","Airoli","Vashi","Turbhe","Ghansoli"],
+        "delhi":["Connaught Place","Nehru Place","Saket","Aerocity","Okhla","Noida","Greater Noida","Gurgaon","Cyber City","Golf Course Road","MG Road","Udyog Vihar","Sohna Road","Dwarka","Jasola","Faridabad","Manesar","IMT Manesar"],
         "dubai":["Business Bay","DIFC","Downtown","Deira","Bur Dubai","Tecom","JLT","Media City","Internet City","Knowledge Village","Academic City","Dubai South","Sheikh Zayed Road","Trade Center","Karama","Al Garhoud","Festival City","Healthcare City"],
         "singapore":["CBD","Marina Bay","Orchard","Raffles Place","Tanjong Pagar","Clarke Quay","City Hall","Bugis","Novena","Jurong East","Tampines","Woodlands","Paya Lebar","One North","Changi Business Park","Seletar"]
       };
@@ -1548,6 +1554,24 @@ Return ONLY properties that strictly match the size, floor, budget, and location
           // Commercial  
           "Small Office": [2500000, 6000000], "Medium Office": [6000000, 15000000], "Large Office": [15000000, 40000000], "Retail Space": [4000000, 12000000]
         },
+        "bangalore": {
+          // Residential
+          "1 BHK": [4000000, 9000000], "2 BHK": [6500000, 15000000], "3 BHK": [10000000, 25000000],
+          // Commercial
+          "Small Office": [3000000, 8000000], "Medium Office": [8000000, 20000000], "Large Office": [20000000, 50000000], "Retail Space": [5000000, 15000000]
+        },
+        "mumbai": {
+          // Residential
+          "1 BHK": [6000000, 15000000], "2 BHK": [10000000, 25000000], "3 BHK": [15000000, 40000000],
+          // Commercial
+          "Small Office": [5000000, 12000000], "Medium Office": [12000000, 30000000], "Large Office": [30000000, 80000000], "Retail Space": [8000000, 25000000]
+        },
+        "delhi": {
+          // Residential
+          "1 BHK": [4500000, 10000000], "2 BHK": [7000000, 18000000], "3 BHK": [12000000, 30000000],
+          // Commercial
+          "Small Office": [3500000, 9000000], "Medium Office": [9000000, 22000000], "Large Office": [22000000, 60000000], "Retail Space": [6000000, 18000000]
+        },
         "dubai": {
           // Residential
           "1 BHK": [800000, 1600000], "2 BHK": [1200000, 2400000], "3 BHK": [1800000, 3600000],
@@ -1561,7 +1585,8 @@ Return ONLY properties that strictly match the size, floor, budget, and location
           "Small Office": [700000, 1600000], "Medium Office": [1600000, 4000000], "Large Office": [4000000, 10000000], "Retail Space": [1200000, 3200000]
         }
       };
-      const currency = key === "kolkata" ? "INR" : key === "dubai" ? "AED" : "SGD";
+      // Use currency from payload (based on country selection) instead of deriving from city
+      const currency = payloadCurrency || 'INR';
       const priceRange = marketPrices[key] || marketPrices["kolkata"];
       const typeRange = priceRange[type] || priceRange["2 BHK"];
       let [minPrice, maxPrice] = typeRange;
