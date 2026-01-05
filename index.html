@@ -393,6 +393,7 @@
                   <select id="pfCountry" class="form-select">
                     <option value="India" selected>India</option>
                     <option value="UAE">UAE</option>
+                    <option value="USA">USA</option>
                   </select>
                 </div>
                 <div class="col-12">
@@ -1004,11 +1005,11 @@ def decrypt_key(encrypted_data, passphrase="default_salt_2024"):
         ];
       } else if (currency === 'USD') {
         buckets = [
-          { value: '0.3-0.5', label: '$0.3 - $0.5 Million' },
-          { value: '0.5-0.8', label: '$0.5 - $0.8 Million' },
-          { value: '0.8-1.2', label: '$0.8 - $1.2 Million' },
-          { value: '1.2-1.8', label: '$1.2 - $1.8 Million' },
-          { value: '1.8-2.5', label: '$1.8 - $2.5 Million' }
+          { value: '0.2-0.4', label: '$0.2 - $0.4 Million' },
+          { value: '0.4-0.7', label: '$0.4 - $0.7 Million' },
+          { value: '0.7-1.0', label: '$0.7 - $1.0 Million' },
+          { value: '1.0-1.5', label: '$1.0 - $1.5 Million' },
+          { value: '1.5-2.5', label: '$1.5 - $2.5 Million' }
         ];
       }
       
@@ -1525,7 +1526,11 @@ Return ONLY properties that strictly match the size, floor, budget, and location
         "mumbai":["Andheri","Powai","Goregaon","Borivali","Kandivali","Malad","Bandra","Kurla","Chembur","Ghatkopar","Vikhroli","Mulund","Thane","Navi Mumbai","Kharghar","Panvel","Airoli","Vashi","Nerul","Belapur","Dahisar","Mira Road","Virar","Kalyan"],
         "delhi":["Dwarka","Rohini","Pitampura","Janakpuri","Vasant Kunj","Saket","Greater Kailash","Defence Colony","Lajpat Nagar","Mayur Vihar","Preet Vihar","Nehru Place","Hauz Khas","Punjabi Bagh","Rajouri Garden","Paschim Vihar","Vikaspuri","Uttam Nagar","Karol Bagh","Model Town","Civil Lines","Kalkaji","Malviya Nagar","Vasundhara"],
         "dubai":["Marina","JLT","JVC","Barsha","Silicon Oasis","Mirdif","Discovery Gardens","Greens","IMPZ","Sports City","Arjan","Al Furjan","Jumeirah","Bur Dubai","Karama","Satwa","Al Qusais","Muhaisnah","Al Warqa","Al Mizhar","Nad Al Sheba","Al Khawaneej","Dubailand","Motor City"],
-        "singapore":["Tampines","Jurong East","Punggol","Serangoon","Bukit Timah","Toa Payoh","Kallang","Clementi","Queenstown","Woodlands","Sengkang","Yishun","Bukit Panjang","Hougang","Pasir Ris","Bedok","Ang Mo Kio","Bishan","Jurong West","Choa Chu Kang","Sembawang","Bukit Batok"]
+        "singapore":["Tampines","Jurong East","Punggol","Serangoon","Bukit Timah","Toa Payoh","Kallang","Clementi","Queenstown","Woodlands","Sengkang","Yishun","Bukit Panjang","Hougang","Pasir Ris","Bedok","Ang Mo Kio","Bishan","Jurong West","Choa Chu Kang","Sembawang","Bukit Batok"],
+        "new york":["Manhattan","Brooklyn Heights","Williamsburg","Long Island City","Astoria","Flushing","Forest Hills","Bronx","Harlem","Upper West Side","Upper East Side","Chelsea","Tribeca","SoHo","Greenwich Village","East Village","Murray Hill","Midtown","Financial District","Battery Park","Jersey City","Hoboken","Queens","Park Slope"],
+        "los angeles":["Santa Monica","Venice","Culver City","West Hollywood","Beverly Hills","Hollywood","Downtown LA","Koreatown","Silver Lake","Echo Park","Pasadena","Glendale","Burbank","Sherman Oaks","Encino","Studio City","North Hollywood","Marina del Rey","Playa Vista","Manhattan Beach","Redondo Beach","Torrance","Long Beach","Irvine"],
+        "chicago":["Lincoln Park","Lakeview","Wicker Park","Bucktown","Logan Square","West Loop","River North","Gold Coast","Streeterville","Loop","South Loop","Printer's Row","Hyde Park","Andersonville","Uptown","Edgewater","Ravenswood","North Center","Roscoe Village","Ukrainian Village","Pilsen","Bridgeport","Evanston","Oak Park"],
+        "houston":["Midtown","Montrose","Heights","Rice Village","River Oaks","Memorial","Galleria","Uptown","Downtown","EaDo","Museum District","Medical Center","Bellaire","West University","Meyerland","Clear Lake","Pearland","Katy","Sugar Land","The Woodlands","Spring","Cypress","Humble","Kingwood"]
       };
       
       const commercialAreasByCity = {
@@ -1534,7 +1539,11 @@ Return ONLY properties that strictly match the size, floor, budget, and location
         "mumbai":["BKC","Andheri East","Lower Parel","Worli","Parel","Nariman Point","Fort","Ballard Estate","Goregaon East","Malad","Powai","Vikhroli","Thane","Navi Mumbai","Airoli","Vashi","Turbhe","Ghansoli"],
         "delhi":["Connaught Place","Nehru Place","Saket","Aerocity","Okhla","Noida","Greater Noida","Gurgaon","Cyber City","Golf Course Road","MG Road","Udyog Vihar","Sohna Road","Dwarka","Jasola","Faridabad","Manesar","IMT Manesar"],
         "dubai":["Business Bay","DIFC","Downtown","Deira","Bur Dubai","Tecom","JLT","Media City","Internet City","Knowledge Village","Academic City","Dubai South","Sheikh Zayed Road","Trade Center","Karama","Al Garhoud","Festival City","Healthcare City"],
-        "singapore":["CBD","Marina Bay","Orchard","Raffles Place","Tanjong Pagar","Clarke Quay","City Hall","Bugis","Novena","Jurong East","Tampines","Woodlands","Paya Lebar","One North","Changi Business Park","Seletar"]
+        "singapore":["CBD","Marina Bay","Orchard","Raffles Place","Tanjong Pagar","Clarke Quay","City Hall","Bugis","Novena","Jurong East","Tampines","Woodlands","Paya Lebar","One North","Changi Business Park","Seletar"],
+        "new york":["Financial District","Midtown","Hudson Yards","Times Square","SoHo","Tribeca","Chelsea","Flatiron","Union Square","Brooklyn","Long Island City","DUMBO","Downtown Brooklyn","MetroTech","Brooklyn Navy Yard","Industry City","Queens Plaza","Court Square"],
+        "los angeles":["Downtown LA","Century City","Beverly Hills","West Hollywood","Santa Monica","Culver City","Playa Vista","El Segundo","Torrance","Irvine","Orange County","Pasadena","Glendale","Burbank","Sherman Oaks","Studio City","Hollywood","Miracle Mile"],
+        "chicago":["Loop","West Loop","River North","Streeterville","Fulton Market","Gold Coast","Lincoln Park","Wicker Park","Bucktown","Merchandise Mart","Willis Tower","O'Hare","Rosemont","Schaumburg","Oak Brook","Naperville","Evanston","Skokie"],
+        "houston":["Downtown","Uptown","Galleria","Energy Corridor","Greenway Plaza","Medical Center","Westchase","Greenspoint","Clear Lake","Sugar Land","The Woodlands","Katy","Cypress","Pearland","Memorial City","City Centre","Post Oak","Montrose"]
       };
       
       const areasByCity = propertyType === 'commercial' ? commercialAreasByCity : residentialAreasByCity;
@@ -1583,6 +1592,30 @@ Return ONLY properties that strictly match the size, floor, budget, and location
           "1 BHK": [850000, 1700000], "2 BHK": [1300000, 2600000], "3 BHK": [1950000, 3900000],
           // Commercial
           "Small Office": [700000, 1600000], "Medium Office": [1600000, 4000000], "Large Office": [4000000, 10000000], "Retail Space": [1200000, 3200000]
+        },
+        "new york": {
+          // Residential (USD)
+          "1 BHK": [400000, 800000], "2 BHK": [650000, 1500000], "3 BHK": [1000000, 2500000],
+          // Commercial (USD)
+          "Small Office": [300000, 700000], "Medium Office": [700000, 1800000], "Large Office": [1800000, 5000000], "Retail Space": [500000, 1500000]
+        },
+        "los angeles": {
+          // Residential (USD)
+          "1 BHK": [350000, 700000], "2 BHK": [550000, 1200000], "3 BHK": [850000, 2000000],
+          // Commercial (USD)
+          "Small Office": [250000, 600000], "Medium Office": [600000, 1500000], "Large Office": [1500000, 4000000], "Retail Space": [450000, 1300000]
+        },
+        "chicago": {
+          // Residential (USD)
+          "1 BHK": [250000, 500000], "2 BHK": [400000, 900000], "3 BHK": [650000, 1600000],
+          // Commercial (USD)
+          "Small Office": [200000, 450000], "Medium Office": [450000, 1200000], "Large Office": [1200000, 3200000], "Retail Space": [350000, 1000000]
+        },
+        "houston": {
+          // Residential (USD)
+          "1 BHK": [200000, 400000], "2 BHK": [320000, 700000], "3 BHK": [500000, 1300000],
+          // Commercial (USD)
+          "Small Office": [150000, 350000], "Medium Office": [350000, 900000], "Large Office": [900000, 2500000], "Retail Space": [280000, 800000]
         }
       };
       // Use currency from payload (based on country selection) instead of deriving from city
