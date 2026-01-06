@@ -590,6 +590,18 @@
                 <span class="position-absolute" style="left:10px;top:50%;transform:translateY(-50%);opacity:.6">🔎</span>
                 <input id="searchBox2" class="form-control ps-5" placeholder="Paste a project/society name here…">
               </div>
+
+              <!-- Finder results → Map (Tab 1 → Tab 2) -->
+              <div id="finderToRetailControls" class="border rounded-3 p-2" style="background:#fff; border-color:#e7eef5; display:none;">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                  <div class="small text-muted" style="min-width:170px;"><b>Tab 1 results on map:</b></div>
+                  <select id="pfFocusSelect2" class="form-select form-select-sm" style="flex:1; min-width:240px;"></select>
+                  <button id="btnPFFocus2" class="btn btn-sm btn-primary btn-pill" type="button">Focus & Zoom</button>
+                  <button id="btnPFShowAll2" class="btn btn-sm btn-outline-primary btn-pill" type="button">Show All</button>
+                </div>
+                <div class="form-help mt-1">You can still search any other place using the box above.</div>
+              </div>
+
               <div id="map2" class="mapbox"></div>
 
               <div class="row g-2 mt-2">
@@ -706,6 +718,18 @@
                 <span class="position-absolute" style="left:10px;top:50%;transform:translateY(-50%);opacity:.6">🔎</span>
                 <input id="searchBox1" class="form-control ps-5" placeholder="Search address, landmark, city...">
               </div>
+
+              <!-- Finder results → Map (Tab 1 → Tab 3) -->
+              <div id="finderToPropControls" class="border rounded-3 p-2" style="background:#fff; border-color:#e7eef5; display:none;">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                  <div class="small text-muted" style="min-width:170px;"><b>Tab 1 results on map:</b></div>
+                  <select id="pfFocusSelect1" class="form-select form-select-sm" style="flex:1; min-width:240px;"></select>
+                  <button id="btnPFFocus1" class="btn btn-sm btn-primary btn-pill" type="button">Focus & Zoom</button>
+                  <button id="btnPFShowAll1" class="btn btn-sm btn-outline-primary btn-pill" type="button">Show All</button>
+                </div>
+                <div class="form-help mt-1">You can still search any other place using the box above.</div>
+              </div>
+
               <div id="map1" class="mapbox"></div>
               <div class="text-muted small mt-2">Selected: <span id="propLatLng">—</span></div>
             </div>
@@ -893,6 +917,48 @@
     </div>
   </div>
 
+  <!-- Focus Modal (Tab 1 results → Tab 2 map) -->
+  <div class="modal fade" id="pfFocusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title">Choose a project to focus</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">Tab 1 search results are now shown as markers in Tab 2. Which one should I zoom into?</div>
+          <select id="pfFocusSelectModal" class="form-select"></select>
+          <div class="form-help mt-2">Tip: You can also click any marker to focus it.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Not now</button>
+          <button type="button" class="btn btn-primary" id="btnPFFocusModal">Focus & Zoom</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Focus Modal (Tab 1 results → Tab 3 map) -->
+  <div class="modal fade" id="pfFocusModal1" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title">Choose a project to focus</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-muted small mb-2">Tab 1 search results are now shown as markers in Tab 3. Which one should I zoom into?</div>
+          <select id="pfFocusSelectModal1" class="form-select"></select>
+          <div class="form-help mt-2">Tip: You can also click any marker to focus it.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Not now</button>
+          <button type="button" class="btn btn-primary" id="btnPFFocusModal1">Focus & Zoom</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Libs -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -967,10 +1033,13 @@ def decrypt_key(encrypted_data, passphrase="default_salt_2024"):
     const pfBtnXLSX = ()=>document.getElementById('btnPFExportXLSX');
     const pfBtnCopyNames = ()=>document.getElementById('btnPFCopyNames');
     let pfResults = [];
+    let pfLastQuery = { country: '', city: '', locality: '' };
+    let pfResultsVersion = 0;
 
     function pfCurrencySymbol(c){ return ({"INR":"₹","AED":"AED ","USD":"$","SGD":"S$","GBP":"£"})[c] || ""; }
     function fmtMoney(n, cur){ if(n==null || isNaN(n)) return "-"; const sym = pfCurrencySymbol(cur); return sym + Math.round(Number(n)).toLocaleString(); }
     function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    function jsQuote(s){ return JSON.stringify(String(s ?? "")); }
     
     // Get budget unit based on currency (lacs for India, million for others)
     function getBudgetUnit(currency) {
@@ -2074,6 +2143,8 @@ Return ONLY properties that strictly match the size, floor, budget, and location
       // Combine preferred localities into a single locality string
       const locality = [prefLoc1, prefLoc2, prefLoc3].filter(Boolean).join(', ');
 
+      pfLastQuery = { country, city, locality };
+
       const errBox = document.getElementById('pfError');
       errBox.classList.add('d-none');
       if(!city){ errBox.textContent="Please enter a city."; errBox.classList.remove('d-none'); return; }
@@ -2223,6 +2294,7 @@ Return ONLY properties that strictly match the size, floor, budget, and location
 
       // Hard limit to 12 for UI (cards/table show first 12)
       pfResults = picks.slice(0, 12);
+      pfResultsVersion++;
       
       // Store all properties for filtering
       allProperties = picks;
@@ -2241,6 +2313,12 @@ Return ONLY properties that strictly match the size, floor, budget, and location
       pfSummaryEl().textContent = finalSummary;
       renderFilteredProperties();
       pfBtnCSV().disabled=false; pfBtnXLSX().disabled=false; pfBtnCopyNames().disabled=false;
+
+      // If Tab 2 map is already loaded, immediately reflect markers + focus choices.
+      try{ updateRetailFromFinder({ promptFocus: false }); }catch(e){ console.warn('Retail sync error', e); }
+
+      // If Tab 3 map is already loaded, immediately reflect markers + focus choices.
+      try{ updatePropFromFinder({ promptFocus: false }); }catch(e){ console.warn('Prop sync error', e); }
     }
 
     // Property type switching functionality
@@ -2458,13 +2536,13 @@ Return ONLY properties that strictly match the size, floor, budget, and location
       // Render cards
       pfCardsEl().innerHTML = paginatedProps.map((p, i) => {
         const title = escapeHTML(p.project_name || `Project ${i+1}`);
+        const rawProjectName = (p && p.project_name) ? String(p.project_name) : '';
+        const projectAttr = escapeHTML(rawProjectName);
         const area = escapeHTML(p.area||"-");
         const apt = escapeHTML(p.apartment_type||"-");
         const size = escapeHTML(p.size||"-");
         const notes = escapeHTML(p.notes||"");
         const gRating = (typeof p.g_rating==='number') ? `<span class="rating"><span class="star">★</span>${p.g_rating.toFixed(1)}</span>` : '';
-        const isSaved = savedProperties.has(p.project_name);
-        const isInCompare = compareList.some(cp => cp.project_name === p.project_name);
         
         const sourceInfo = p.source_url ? `
           <div class="mt-2 pt-2" style="border-top: 1px solid #e7eef5;">
@@ -2483,16 +2561,11 @@ Return ONLY properties that strictly match the size, floor, budget, and location
         ` : '';
         
         return `
-          <div class="prop-card">
+          <div class="prop-card" role="button" tabindex="0" data-project-name="${projectAttr}" style="cursor:pointer">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div class="prop-title">${title}</div>
               <div class="d-flex gap-1">
-                <button class="btn btn-sm ${isSaved ? 'btn-danger' : 'btn-outline-secondary'}" onclick="toggleSave('${escapeHTML(p.project_name)}')" title="${isSaved ? 'Remove from saved' : 'Save property'}">
-                  ${isSaved ? '❤️' : '🤍'}
-                </button>
-                <button class="btn btn-sm ${isInCompare ? 'btn-warning' : 'btn-outline-secondary'}" onclick="toggleCompare('${escapeHTML(p.project_name)}')" title="${isInCompare ? 'Remove from comparison' : 'Add to comparison'}" ${compareList.length >= 4 && !isInCompare ? 'disabled' : ''}>
-                  ${isInCompare ? '✓' : '⊕'}
-                </button>
+                <button class="btn btn-sm btn-outline-primary" onclick="goToRetailAndFocus(${jsQuote(p.project_name)})" title="View on map (Tab 2)">📍</button>
               </div>
             </div>
             <div class="text-muted small mb-1">${area} • ${apt} • ${size || '—'}</div>
@@ -2502,6 +2575,23 @@ Return ONLY properties that strictly match the size, floor, budget, and location
             ${sourceInfo}
           </div>`;
       }).join("");
+
+      // Make cards clickable, but don't hijack clicks on interactive elements inside.
+      pfCardsEl().querySelectorAll('.prop-card[data-project-name]').forEach(card => {
+        const onActivate = (ev) => {
+          const target = ev.target;
+          if (target && target.closest && target.closest('button,a,input,select,textarea,label')) return;
+          const name = card.dataset.projectName || '';
+          if (name) window.goToRetailAndFocus(name);
+        };
+        card.addEventListener('click', onActivate);
+        card.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            onActivate(ev);
+          }
+        });
+      });
       
       // Render table
       pfTableBody().innerHTML = paginatedProps.map((p, i) => {
@@ -2544,6 +2634,31 @@ Return ONLY properties that strictly match the size, floor, budget, and location
       }
       renderFilteredProperties();
       updateComparePanel();
+    };
+
+    // Jump from Tab 1 card -> Tab 2 map and focus/zoom
+    window.goToRetailAndFocus = function(projectName){
+      const tabBtn = document.getElementById('tab-retail');
+      if(tabBtn && window.bootstrap && window.bootstrap.Tab){
+        try{ new bootstrap.Tab(tabBtn).show(); }catch(e){ console.warn('Failed to switch tab', e); }
+      }
+
+      const tryFocus = (attempt=0) => {
+        // Ensure map is initialized if Google is ready
+        try{ if(window.google && !map2){ initMap2(); } }catch{}
+        if(window.google && map2 && typeof focusFinderResultOnMap2 === 'function'){
+          try{ updateRetailFromFinder({ promptFocus: false }); }catch{}
+          focusFinderResultOnMap2(projectName);
+          return;
+        }
+        if(attempt < 25){
+          setTimeout(()=>tryFocus(attempt+1), 200);
+        } else {
+          alert('Map is still loading. Please try again in a moment.');
+        }
+      };
+
+      setTimeout(()=>tryFocus(0), 250);
     };
     
     // Update comparison panel
@@ -2660,6 +2775,30 @@ Return ONLY properties that strictly match the size, floor, budget, and location
           map1.setCenter(latlng); map1.setZoom(15); setMarker1(latlng);
         },()=>alert('Location unavailable'));
       });
+
+      // Finder results controls (Tab 1 → Tab 3)
+      const btnFocus1 = document.getElementById('btnPFFocus1');
+      const btnShowAll1 = document.getElementById('btnPFShowAll1');
+      const selInline1 = document.getElementById('pfFocusSelect1');
+      if(btnFocus1 && selInline1){
+        btnFocus1.addEventListener('click', ()=> focusFinderResultOnMap1(selInline1.value));
+      }
+      if(btnShowAll1){
+        btnShowAll1.addEventListener('click', ()=>{
+          renderFinderMarkersOnMap1();
+          fitMap1ToFinderMarkers();
+        });
+      }
+      const btnModalFocus1 = document.getElementById('btnPFFocusModal1');
+      const selModal1 = document.getElementById('pfFocusSelectModal1');
+      if(btnModalFocus1 && selModal1){
+        btnModalFocus1.addEventListener('click', ()=>{
+          try{ focusFinderResultOnMap1(selModal1.value); }finally{ try{ pfFocusModalInstance1?.hide(); }catch{} }
+        });
+      }
+
+      // If user already ran Tab 1 search, reflect it now.
+      try{ updatePropFromFinder({ promptFocus: false }); }catch(e){ console.warn('Prop sync error', e); }
     }
     function setMarker1(latlng){
       if(marker1) marker1.setMap(null);
@@ -2893,6 +3032,292 @@ result
 
     // Map 2 (Retail)
     const markersByType={};
+    let finderMarkers2 = [];
+    let finderInfoWindows2 = [];
+    let retailPromptedVersion = 0;
+    let pfFocusModalInstance = null;
+
+    // Map 1 (Estimator) - Finder overlays
+    let finderMarkers1 = [];
+    let finderInfoWindows1 = [];
+    let propPromptedVersion = 0;
+    let pfFocusModalInstance1 = null;
+
+    function clearFinderMarkers1(){
+      finderMarkers1.forEach(m=>{ try{ m.setMap(null); }catch{} });
+      finderMarkers1 = [];
+      finderInfoWindows1.forEach(w=>{ try{ w.close(); }catch{} });
+      finderInfoWindows1 = [];
+    }
+
+    function populateFinderFocusSelects1(results){
+      const controls = document.getElementById('finderToPropControls');
+      const selInline = document.getElementById('pfFocusSelect1');
+      const selModal = document.getElementById('pfFocusSelectModal1');
+      if(!controls || !selInline || !selModal) return;
+
+      if(!results || !results.length){
+        controls.style.display = 'none';
+        selInline.innerHTML = '';
+        selModal.innerHTML = '';
+        return;
+      }
+
+      controls.style.display = 'block';
+      const opts = results.map((r, idx)=>{
+        const hasGeo = (typeof r.lat === 'number' && typeof r.lng === 'number');
+        const suffix = hasGeo ? '' : ' (will search)';
+        return `<option value="${escapeHTML(r.name)}">${idx+1}) ${escapeHTML(r.name)}${suffix}</option>`;
+      }).join('');
+      selInline.innerHTML = opts;
+      selModal.innerHTML = opts;
+    }
+
+    function fitMap1ToFinderMarkers(){
+      if(!map1 || !finderMarkers1.length) return;
+      const bounds = new google.maps.LatLngBounds();
+      finderMarkers1.forEach(m=>{
+        const pos = m.getPosition();
+        if(pos) bounds.extend(pos);
+      });
+      try{ map1.fitBounds(bounds); }catch{}
+    }
+
+    function focusFinderResultOnMap1(name){
+      const results = getFinderResultsForMap();
+      const target = results.find(r=>r.name === name) || results.find(r=>r.name.toLowerCase() === String(name).toLowerCase());
+      if(!target){ alert('Please choose a project to focus.'); return; }
+
+      const focusWithLatLng = (lat, lng) => {
+        const latlng = { lat, lng };
+        map1.setCenter(latlng);
+        map1.setZoom(16);
+        setMarker1(latlng);
+      };
+
+      if(typeof target.lat === 'number' && typeof target.lng === 'number'){
+        focusWithLatLng(target.lat, target.lng);
+        return;
+      }
+
+      if(!placesService1 || !window.google){
+        alert('Map service is not ready yet. Please try again in a moment.');
+        return;
+      }
+      const qCity = (pfLastQuery && pfLastQuery.city) ? `, ${pfLastQuery.city}` : '';
+      const query = `${target.name}${qCity}`;
+      placesService1.textSearch({ query }, (res, status) => {
+        if(status === google.maps.places.PlacesServiceStatus.OK && res && res[0] && res[0].geometry && res[0].geometry.location){
+          const loc = res[0].geometry.location;
+          const lat = (typeof loc.lat === 'function') ? loc.lat() : loc.lat;
+          const lng = (typeof loc.lng === 'function') ? loc.lng() : loc.lng;
+          if(typeof lat === 'number' && typeof lng === 'number') focusWithLatLng(lat, lng);
+          else alert('Could not resolve location for that project. Try searching it in the box above.');
+        } else {
+          alert('Could not find that project on Google Maps. Try searching it in the box above.');
+        }
+      });
+    }
+
+    function renderFinderMarkersOnMap1(){
+      if(!map1 || !window.google) return;
+      clearFinderMarkers1();
+
+      const results = getFinderResultsForMap();
+      const mappable = results.filter(r => typeof r.lat === 'number' && typeof r.lng === 'number');
+
+      mappable.forEach((r, idx)=>{
+        const pos = { lat: r.lat, lng: r.lng };
+        const m = new google.maps.Marker({
+          position: pos,
+          map: map1,
+          label: { text: String(idx+1), fontSize: '12px', fontWeight: '700' },
+          title: r.name,
+          zIndex: 500 + idx
+        });
+        const info = new google.maps.InfoWindow({
+          content: `<div style="font-size:13px;"><b>${escapeHTML(r.name)}</b><br/><span class="text-muted" style="font-size:12px;">Click marker to focus</span></div>`
+        });
+        m.addListener('click', ()=>{
+          try{ finderInfoWindows1.forEach(w=>w.close()); }catch{}
+          info.open({ anchor: m, map: map1 });
+          focusFinderResultOnMap1(r.name);
+        });
+        finderMarkers1.push(m);
+        finderInfoWindows1.push(info);
+      });
+
+      populateFinderFocusSelects1(results);
+
+      if(!marker1 && finderMarkers1.length){
+        fitMap1ToFinderMarkers();
+      }
+    }
+
+    function updatePropFromFinder({ promptFocus } = { promptFocus: false }){
+      const results = getFinderResultsForMap();
+      populateFinderFocusSelects1(results);
+
+      if(window.google && map1){
+        renderFinderMarkersOnMap1();
+      }
+
+      if(promptFocus && results && results.length && pfResultsVersion && propPromptedVersion !== pfResultsVersion){
+        propPromptedVersion = pfResultsVersion;
+        const modalEl = document.getElementById('pfFocusModal1');
+        if(modalEl){
+          if(!pfFocusModalInstance1){ pfFocusModalInstance1 = new bootstrap.Modal(modalEl); }
+          try{ pfFocusModalInstance1.show(); }catch{}
+        }
+      }
+    }
+
+    function clearFinderMarkers2(){
+      finderMarkers2.forEach(m=>{ try{ m.setMap(null); }catch{} });
+      finderMarkers2 = [];
+      finderInfoWindows2.forEach(w=>{ try{ w.close(); }catch{} });
+      finderInfoWindows2 = [];
+    }
+
+    function getFinderResultsForMap(){
+      // Prefer what's currently shown in Tab 1 (filtered list). Fallback to the raw picks.
+      const src = (Array.isArray(filteredProperties) && filteredProperties.length) ? filteredProperties : (Array.isArray(allProperties) ? allProperties : []);
+      return src
+        .map(p=>({
+          name: (p && p.project_name) ? String(p.project_name) : '',
+          lat: (p && typeof p.lat === 'number') ? p.lat : null,
+          lng: (p && typeof p.lng === 'number') ? p.lng : null,
+          raw: p
+        }))
+        .filter(x=>x.name);
+    }
+
+    function populateFinderFocusSelects(results){
+      const controls = document.getElementById('finderToRetailControls');
+      const selInline = document.getElementById('pfFocusSelect2');
+      const selModal = document.getElementById('pfFocusSelectModal');
+      if(!controls || !selInline || !selModal) return;
+
+      if(!results || !results.length){
+        controls.style.display = 'none';
+        selInline.innerHTML = '';
+        selModal.innerHTML = '';
+        return;
+      }
+
+      controls.style.display = 'block';
+      const opts = results.map((r, idx)=>{
+        const hasGeo = (typeof r.lat === 'number' && typeof r.lng === 'number');
+        const suffix = hasGeo ? '' : ' (will search)';
+        return `<option value="${escapeHTML(r.name)}">${idx+1}) ${escapeHTML(r.name)}${suffix}</option>`;
+      }).join('');
+      selInline.innerHTML = opts;
+      selModal.innerHTML = opts;
+    }
+
+    function fitMap2ToFinderMarkers(){
+      if(!map2 || !finderMarkers2.length) return;
+      const bounds = new google.maps.LatLngBounds();
+      finderMarkers2.forEach(m=>{
+        const pos = m.getPosition();
+        if(pos) bounds.extend(pos);
+      });
+      try{ map2.fitBounds(bounds); }catch{}
+    }
+
+    function focusFinderResultOnMap2(name){
+      const results = getFinderResultsForMap();
+      const target = results.find(r=>r.name === name) || results.find(r=>r.name.toLowerCase() === String(name).toLowerCase());
+      if(!target){ alert('Please choose a project to focus.'); return; }
+
+      const focusWithLatLng = (lat, lng) => {
+        const latlng = { lat, lng };
+        map2.setCenter(latlng);
+        map2.setZoom(16);
+        setMarker2(latlng);
+      };
+
+      if(typeof target.lat === 'number' && typeof target.lng === 'number'){
+        focusWithLatLng(target.lat, target.lng);
+        return;
+      }
+
+      // If we don't have coordinates, try a Google Places text search using the existing map (keeps free search intact).
+      if(!placesService2 || !window.google){
+        alert('Map service is not ready yet. Please try again in a moment.');
+        return;
+      }
+      const qCity = (pfLastQuery && pfLastQuery.city) ? `, ${pfLastQuery.city}` : '';
+      const query = `${target.name}${qCity}`;
+      placesService2.textSearch({ query }, (res, status) => {
+        if(status === google.maps.places.PlacesServiceStatus.OK && res && res[0] && res[0].geometry && res[0].geometry.location){
+          const loc = res[0].geometry.location;
+          const lat = (typeof loc.lat === 'function') ? loc.lat() : loc.lat;
+          const lng = (typeof loc.lng === 'function') ? loc.lng() : loc.lng;
+          if(typeof lat === 'number' && typeof lng === 'number') focusWithLatLng(lat, lng);
+          else alert('Could not resolve location for that project. Try searching it in the box above.');
+        } else {
+          alert('Could not find that project on Google Maps. Try searching it in the box above.');
+        }
+      });
+    }
+
+    function renderFinderMarkersOnMap2(){
+      if(!map2 || !window.google) return;
+      clearFinderMarkers2();
+
+      const results = getFinderResultsForMap();
+      // Only plot markers for results with known coordinates.
+      const mappable = results.filter(r => typeof r.lat === 'number' && typeof r.lng === 'number');
+
+      mappable.forEach((r, idx)=>{
+        const pos = { lat: r.lat, lng: r.lng };
+        const m = new google.maps.Marker({
+          position: pos,
+          map: map2,
+          label: { text: String(idx+1), fontSize: '12px', fontWeight: '700' },
+          title: r.name,
+          zIndex: 500 + idx
+        });
+        const info = new google.maps.InfoWindow({
+          content: `<div style="font-size:13px;"><b>${escapeHTML(r.name)}</b><br/><span class="text-muted" style="font-size:12px;">Click marker to focus</span></div>`
+        });
+        m.addListener('click', ()=>{
+          try{ finderInfoWindows2.forEach(w=>w.close()); }catch{}
+          info.open({ anchor: m, map: map2 });
+          focusFinderResultOnMap2(r.name);
+        });
+        finderMarkers2.push(m);
+        finderInfoWindows2.push(info);
+      });
+
+      populateFinderFocusSelects(results);
+
+      // If the user hasn't selected a POI center yet, show everything.
+      if(!marker2 && finderMarkers2.length){
+        fitMap2ToFinderMarkers();
+      }
+    }
+
+    function updateRetailFromFinder({ promptFocus } = { promptFocus: false }){
+      // Can run even if map isn't ready yet (populates selects; markers later)
+      const results = getFinderResultsForMap();
+      populateFinderFocusSelects(results);
+
+      if(window.google && map2){
+        renderFinderMarkersOnMap2();
+      }
+
+      if(promptFocus && results && results.length && pfResultsVersion && retailPromptedVersion !== pfResultsVersion){
+        retailPromptedVersion = pfResultsVersion;
+        const modalEl = document.getElementById('pfFocusModal');
+        if(modalEl){
+          if(!pfFocusModalInstance){ pfFocusModalInstance = new bootstrap.Modal(modalEl); }
+          try{ pfFocusModalInstance.show(); }catch{}
+        }
+      }
+    }
+
     function initMap2(){
       if(!document.getElementById('map2')) return;
       map2=new google.maps.Map(document.getElementById('map2'),{center:{lat:22.5726,lng:88.3639},zoom:12,mapTypeControl:false});
@@ -2914,6 +3339,30 @@ result
           map2.setCenter(latlng); map2.setZoom(15); setMarker2(latlng);
         },()=>alert('Location unavailable'));
       });
+
+      // Finder results controls (Tab 1 → Tab 2)
+      const btnFocus = document.getElementById('btnPFFocus2');
+      const btnShowAll = document.getElementById('btnPFShowAll2');
+      const selInline = document.getElementById('pfFocusSelect2');
+      if(btnFocus && selInline){
+        btnFocus.addEventListener('click', ()=> focusFinderResultOnMap2(selInline.value));
+      }
+      if(btnShowAll){
+        btnShowAll.addEventListener('click', ()=>{
+          renderFinderMarkersOnMap2();
+          fitMap2ToFinderMarkers();
+        });
+      }
+      const btnModalFocus = document.getElementById('btnPFFocusModal');
+      const selModal = document.getElementById('pfFocusSelectModal');
+      if(btnModalFocus && selModal){
+        btnModalFocus.addEventListener('click', ()=>{
+          try{ focusFinderResultOnMap2(selModal.value); }finally{ try{ pfFocusModalInstance?.hide(); }catch{} }
+        });
+      }
+
+      // If user already ran Tab 1 search, reflect it now.
+      try{ updateRetailFromFinder({ promptFocus: false }); }catch(e){ console.warn('Retail sync error', e); }
     }
     function setMarker2(latlng){
       if(marker2) marker2.setMap(null);
@@ -3516,8 +3965,17 @@ Please summarize trade area strengths/weaknesses and suggest 3 retail categories
               google.maps.event.trigger(map1,'resize'); 
               map1.setCenter(c);
             }
+
+            // When entering Tab 3, show all Tab 1 results on the map and ask which to focus.
+            try{ updatePropFromFinder({ promptFocus: true }); }catch(err){ console.warn('Prop sync on tab show failed', err); }
           }
-          if(e.target.id==='tab-retail' && map2){ const c=map2.getCenter(); google.maps.event.trigger(map2,'resize'); map2.setCenter(c); }
+          if(e.target.id==='tab-retail' && map2){
+            const c=map2.getCenter();
+            google.maps.event.trigger(map2,'resize');
+            map2.setCenter(c);
+            // When entering Tab 2, show all Tab 1 results on the map and ask which to focus.
+            try{ updateRetailFromFinder({ promptFocus: true }); }catch(err){ console.warn('Retail sync on tab show failed', err); }
+          }
         }
       });
     });
