@@ -1,0 +1,55 @@
+{
+  "action": "bulk_property_analysis",
+  "requests": [
+    {
+      "request_id": "REQ-1",
+      "city": "Kolkata",
+      "location": "Ballygunge",
+      "property_type": "3 BHK",
+      "size_sqft": 1200,
+      "median_sale_psf": 9500,
+      "median_rent_psf_monthly": 30,
+      "year_built": 2018,
+      "condition_premium_pct": 5,
+      "vacancy_pct": 5,
+      "maintenance_pct": 1,
+      "counts": {
+        "supermarket": 4,
+        "hospital": 2,
+        "school": 6,
+        "metro_station": 1,
+        "restaurant": 12
+      },
+      "ratings": {
+        "supermarket": 4.2,
+        "hospital": 4.1,
+        "school": 4.0,
+        "metro_station": 4.3,
+        "restaurant": 4.4
+      }
+    },
+    {
+      "request_id": "REQ-2",
+      "city": "Kolkata",
+      "location": "New Town",
+      "property_type": "2 BHK",
+      "size_sqft": 950,
+      "median_sale_psf": 8200,
+      "median_rent_psf_monthly": 24,
+      "year_built": 2020,
+      "counts": {
+        "supermarket": 3,
+        "hospital": 1,
+        "school": 4,
+        "metro_station": 0,
+        "restaurant": 8
+      },
+      "ratings": {
+        "supermarket": 4.0,
+        "hospital": 3.8,
+        "school": 4.1,
+        "restaurant": 4.2
+      }
+    }
+  ]
+}
